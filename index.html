@@ -79,12 +79,19 @@
 const ORT_VER = '1.22.0';
 const $ = (id) => document.getElementById(id);
 const logEl = $('log');
-const log = (m) => { logEl.textContent += m + '\n'; logEl.scrollTop = logEl.scrollHeight; };
+const recent = [];
+const log = (m) => {
+  logEl.textContent += m + '\n'; logEl.scrollTop = logEl.scrollHeight;
+  recent.push(m); if (recent.length > 6) recent.shift();
+  try { localStorage.setItem('stemroom_last', recent.join('\n')); } catch {}
+};
 const fmt = (s) => s < 60 ? s.toFixed(1) + ' s' : Math.floor(s/60) + ' min ' + Math.round(s%60) + ' s';
 const row = (k, v, cls='') => `<div class="row"><span>${k}</span><span class="${cls}">${v}</span></div>`;
 
 if (localStorage.getItem('stemroom_run') === 'started') {
   $('crash').style.display = 'block';
+  const last = localStorage.getItem('stemroom_last');
+  if (last) { const d = document.createElement('pre'); d.style.marginTop = '8px'; d.textContent = 'Last steps before it stopped:\n' + last; $('crash').appendChild(d); }
   localStorage.removeItem('stemroom_run');
 }
 
@@ -153,16 +160,15 @@ async function fetchRemoteModel() {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const total = +r.headers.get('content-length') || 180534758;
       const reader = r.body.getReader();
-      const chunks = []; let got = 0;
+      let buf = new Uint8Array(total + 1048576); let got = 0;
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
-        chunks.push(value); got += value.length;
+        if (got + value.length > buf.length) { const nb = new Uint8Array(got + value.length + 8388608); nb.set(buf.subarray(0, got)); buf = nb; }
+        buf.set(value, got); got += value.length;
         setProgress(Math.min(got / total, 1), `Model download ${(got/1048576).toFixed(0)} / ${(total/1048576).toFixed(0)} MB`);
       }
-      const buf = new Uint8Array(got); let o = 0;
-      for (const c of chunks) { buf.set(c, o); o += c.length; }
-      return buf.buffer;
+      return buf.slice(0, got).buffer;
     } catch (e) {
       lastErr = e;
       log('Model fetch failed: ' + (e && e.message ? e.message : e));
@@ -231,15 +237,18 @@ $('run').addEventListener('click', async () => {
         setProgress(progress, `Segment ${currentSegment} of ${totalSegments}` + (eta ? ` · about ${fmt(eta)} left` : ''));
       },
     });
-    const modelBuf = await fetchModel();
-    log('Model downloaded, starting session…');
+    let modelBuf = await fetchModel();
+    log('Model downloaded (' + (modelBuf.byteLength/1048576).toFixed(0) + ' MB), starting session…');
     await processor.loadModel(modelBuf);
+    modelBuf = null;
+    log('Model session ready');
     t.load = (performance.now() - t1) / 1000;
 
     $('stage').textContent = 'Separating stems…';
     setProgress(0, '');
     const t2 = performance.now();
     tSep = t2;
+    log('Separating…');
     const result = await processor.separate(left, right);
     t.sep = (performance.now() - t2) / 1000;
     setProgress(1, 'Done');
