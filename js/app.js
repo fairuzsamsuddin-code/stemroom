@@ -337,6 +337,7 @@ function resetAdd() {
   state.decoded = null; state.file = null;
   $('file').value = ''; $('drop').classList.remove('has'); $('drop-text').textContent = 'Choose an audio file';
   $('add-details').hidden = true; $('add-progress').hidden = true;
+  $('in-url').value = ''; urlMsg('Works with a direct link to an mp3, m4a, wav or flac file, and with Dropbox share links. Links to YouTube, Spotify or Apple Music can\'t be used.');
 }
 $('btn-add').addEventListener('click', () => { resetAdd(); show('add'); $('top-title').textContent = 'Add a song'; $('top-actions').innerHTML = ''; });
 $('btn-back').addEventListener('click', () => {
@@ -355,26 +356,87 @@ function updateEstimate() {
 $('in-start').addEventListener('input', updateEstimate);
 $('in-end').addEventListener('input', updateEstimate);
 
-$('file').addEventListener('change', async () => {
-  const f = $('file').files[0]; if (!f) return;
-  $('drop-text').textContent = 'Reading ' + f.name + '…';
+async function useAudio(arrayBuffer, name) {
+  $('drop-text').textContent = 'Reading ' + name + '…';
   try {
     await engine.init();
-    const buf = await f.arrayBuffer();
-    const dec = await engine.ctx.decodeAudioData(buf);
-    state.decoded = dec; state.file = f;
-    $('drop').classList.add('has'); $('drop-text').textContent = f.name;
+    const dec = await engine.ctx.decodeAudioData(arrayBuffer);
+    state.decoded = dec; state.file = { name };
+    $('drop').classList.add('has'); $('drop-text').textContent = name;
     $('add-details').hidden = false;
-    $('in-title').value = f.name.replace(/\.[^.]+$/, '').replace(/[_]+/g, ' ');
+    $('in-title').value = name.replace(/\.[^.]+$/, '').replace(/[_]+/g, ' ');
     $('in-start').value = 0; $('in-end').value = Math.floor(Math.min(dec.duration, 360));
     $('in-end').max = Math.floor(dec.duration);
     if (dec.duration > 360) toast('Long song: the first 6 minutes are selected. Change Start and End to pick another part.');
     updateEstimate();
+    return true;
   } catch (e) {
     $('drop-text').textContent = 'Choose an audio file';
-    toast('This file could not be read. Try an mp3, m4a or wav that is saved on this device.', true);
+    toast('This file could not be read as audio. Try an mp3, m4a, wav or flac.', true);
+    return false;
   }
+}
+$('file').addEventListener('change', async () => {
+  const f = $('file').files[0]; if (!f) return;
+  $('drop-text').textContent = 'Reading ' + f.name + '…';
+  try { await useAudio(await f.arrayBuffer(), f.name); }
+  catch { $('drop-text').textContent = 'Choose an audio file'; toast('This file could not be read. If it is in iCloud Drive, open it in Files first so it downloads.', true); }
 });
+
+/* ---------- add from a link ---------- */
+const STREAMING = /(^|\.)(youtube\.com|youtu\.be|music\.youtube\.com|spotify\.com|open\.spotify\.com|music\.apple\.com|soundcloud\.com|deezer\.com|tidal\.com|bandcamp\.com|tiktok\.com|instagram\.com|facebook\.com|fb\.watch|twitter\.com|x\.com|vimeo\.com)$/i;
+export function normalizeLink(raw) {
+  let u;
+  try { u = new URL(raw.trim()); } catch { return { error: 'That doesn\'t look like a web link. Paste the full address, starting with https://' }; }
+  if (u.protocol !== 'https:' && u.protocol !== 'http:') return { error: 'Only web links (https://) can be used.' };
+  const host = u.hostname.toLowerCase();
+  if (STREAMING.test(host)) return { error: 'Streaming and video sites can\'t be used. Stemroom only takes links to audio files you have the right to use. Save the file to your device and add it with Choose an audio file.' };
+  if (/(^|\.)dropbox\.com$/.test(host)) { u.hostname = 'dl.dropboxusercontent.com'; u.searchParams.delete('dl'); u.searchParams.set('raw', '1'); }
+  else if (host === 'drive.google.com') {
+    const m = u.pathname.match(/\/file\/d\/([^/]+)/) || (u.searchParams.get('id') ? [0, u.searchParams.get('id')] : null);
+    if (m) return { url: `https://drive.google.com/uc?export=download&id=${m[1]}`, name: 'Google Drive file', note: 'drive' };
+  }
+  else if (host === 'archive.org' && u.pathname.startsWith('/details/')) return { error: 'Open the item on archive.org, tap the audio file under "Download options", and paste that link instead.' };
+  const last = decodeURIComponent(u.pathname.split('/').filter(Boolean).pop() || 'Song');
+  return { url: u.toString(), name: last };
+}
+function urlMsg(t, err) { const m = $('url-msg'); m.textContent = t; m.classList.toggle('err', !!err); }
+$('btn-url').addEventListener('click', async () => {
+  const n = normalizeLink($('in-url').value);
+  if (n.error) { urlMsg(n.error, true); return; }
+  const btn = $('btn-url'); btn.disabled = true;
+  urlMsg('Downloading…'); $('url-bar').hidden = false; $('url-fill').style.width = '0%';
+  try {
+    const r = await fetch(n.url, { mode: 'cors', credentials: 'omit' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const type = (r.headers.get('content-type') || '').toLowerCase();
+    if (type.includes('text/html')) throw new Error('page');
+    const total = +r.headers.get('content-length') || 0;
+    if (total > 250 * 1048576) throw new Error('big');
+    const reader = r.body.getReader(); const chunks = []; let got = 0;
+    for (;;) {
+      const { done, value } = await reader.read(); if (done) break;
+      chunks.push(value); got += value.length;
+      if (got > 250 * 1048576) throw new Error('big');
+      $('url-fill').style.width = total ? Math.round((got / total) * 100) + '%' : '50%';
+      urlMsg(`Downloading… ${(got / 1048576).toFixed(1)} MB`);
+    }
+    const all = new Uint8Array(got); let o = 0; for (const c of chunks) { all.set(c, o); o += c.length; }
+    let name = n.name;
+    const cd = r.headers.get('content-disposition') || ''; const mm = cd.match(/filename\*?=(?:UTF-8'')?"?([^";]+)/i);
+    if (mm) name = decodeURIComponent(mm[1]);
+    urlMsg('Downloaded. Reading the audio…');
+    const ok = await useAudio(all.buffer, name);
+    urlMsg(ok ? 'Link added. Check the details below.' : 'The download worked, but it isn\'t an audio file Stemroom can read.', !ok);
+  } catch (e) {
+    const m = String(e.message || e);
+    if (m === 'page') urlMsg('That link opens a web page, not an audio file. Use the direct download link to the file.', true);
+    else if (m === 'big') urlMsg('That file is too large (over 250 MB).', true);
+    else if (/^HTTP/.test(m)) urlMsg('The site refused the download (' + m + '). Check that the link is public and still works.', true);
+    else urlMsg('This site doesn\'t allow Stemroom to download from it. Save the file to your device and add it with Choose an audio file.', true);
+  } finally { btn.disabled = false; $('url-bar').hidden = true; }
+});
+$('in-url').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('btn-url').click(); });
 
 function cancelSeparation() {
   state.sepToken++;

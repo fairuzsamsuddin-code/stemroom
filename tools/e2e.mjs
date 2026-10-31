@@ -37,7 +37,7 @@ const ctx = await browser.newContext({ viewport: { width: 1180, height: 820 }, a
 const page = await ctx.newPage();
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
-page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); if (real) console.log('[page]', m.text()); });
+page.on('console', (m) => { if (m.type() === 'error' && !/ERR_FAILED/.test(m.text())) errors.push(m.text()); if (real) console.log('[page]', m.text()); });
 
 try {
   const url = base + '?nosw' + (real ? '' : '&worker=' + encodeURIComponent('tools/mock.worker.js'));
@@ -46,8 +46,22 @@ try {
   await page.screenshot({ path: outDir + '1-library.png' });
 
   await page.click('#btn-add');
-  await page.setInputFiles('#file', { name: 'Test Song.wav', mimeType: 'audio/wav', buffer: makeWav(14) });
+  // links: streaming sites are refused, bad links explained, a direct audio link works
+  await page.fill('#in-url', 'https://www.youtube.com/watch?v=abc'); await page.click('#btn-url');
+  check('YouTube link is refused', /can't be used/.test(await page.textContent('#url-msg')));
+  await page.fill('#in-url', 'not a link'); await page.click('#btn-url');
+  check('bad link is explained', /web link/.test(await page.textContent('#url-msg')));
+  await page.route('https://blocked.example/**', (r) => r.abort());
+  await page.fill('#in-url', 'https://blocked.example/a.mp3'); await page.click('#btn-url');
+  await page.waitForFunction(() => /doesn't allow/.test(document.getElementById('url-msg').textContent), null, { timeout: 10000 });
+  check('blocked site gets a clear message', true);
+  const linkWav = makeWav(14);
+  await page.route('https://music.example/**', (r) => r.fulfill({ status: 200, headers: { 'content-type': 'audio/wav', 'access-control-allow-origin': '*', 'cross-origin-resource-policy': 'cross-origin' }, body: linkWav }));
+  await page.fill('#in-url', 'https://music.example/files/Linked%20Song.wav'); await page.click('#btn-url');
   await page.waitForSelector('#add-details:not([hidden])', { timeout: 20000 });
+  check('direct audio link loads', (await page.inputValue('#in-title')) === 'Linked Song', await page.inputValue('#in-title'));
+  await page.setInputFiles('#file', { name: 'Test Song.wav', mimeType: 'audio/wav', buffer: makeWav(14) });
+  await page.waitForFunction(() => document.getElementById('in-title').value === 'Test Song', null, { timeout: 20000 });
   check('title filled from file name', (await page.inputValue('#in-title')) === 'Test Song');
   await page.fill('#in-end', '12');
   await page.screenshot({ path: outDir + '2-add.png' });

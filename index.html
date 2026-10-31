@@ -47,6 +47,13 @@
           <span class="drop-sub">mp3, m4a, wav or flac, from Files or iCloud Drive</span>
         </label>
         <input id="file" type="file" hidden>
+        <div class="or"><span>or paste a link</span></div>
+        <div class="linkrow">
+          <input id="in-url" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://example.com/song.mp3" aria-label="Link to an audio file">
+          <button class="btn" id="btn-url">Get</button>
+        </div>
+        <div class="bar" id="url-bar" hidden><div id="url-fill"></div></div>
+        <p class="hint" id="url-msg">Works with a direct link to an mp3, m4a, wav or flac file, and with Dropbox share links. Links to YouTube, Spotify or Apple Music can't be used.</p>
       </div>
 
       <div class="card" id="add-details" hidden>

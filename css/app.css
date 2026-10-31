@@ -116,3 +116,11 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
   main { max-width: 980px; }
   .stem canvas { height: 64px; }
 }
+
+.or { display: flex; align-items: center; gap: 10px; color: var(--mute); font-size: 13px; margin: 14px 0; }
+.or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.linkrow { display: flex; gap: 8px; }
+.linkrow input { flex: 1; min-width: 0; background: #0E0F13; color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; font: inherit; font-size: 16px; }
+#url-bar { margin-top: 10px; }
+#url-bar > div { background: var(--accent); }
+#url-msg.err { color: var(--bad); }
