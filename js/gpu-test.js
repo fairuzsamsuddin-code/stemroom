@@ -19,7 +19,7 @@ if (localStorage.getItem('stemroom_gpu_run') === 'started') {
   localStorage.removeItem('stemroom_gpu_run');
 }
 
-let adapterInfo = 'none', hasGPU = false, limits = {};
+let adapterInfo = 'none', hasGPU = false, limits = {}, hasF16 = false;
 try {
   const ad = navigator.gpu && (await navigator.gpu.requestAdapter());
   if (ad) {
@@ -27,13 +27,14 @@ try {
     const i = ad.info || {};
     adapterInfo = [i.vendor, i.architecture].filter(Boolean).join(' ') || 'available';
     limits = { buf: ad.limits.maxBufferSize, stor: ad.limits.maxStorageBufferBindingSize };
+    hasF16 = ad.features.has('shader-f16');
   }
 } catch (e) { log('Adapter check failed: ' + e.message); }
 $('env').innerHTML = row('WebGPU', hasGPU ? 'Yes (' + adapterInfo + ')' : 'No', hasGPU ? 'ok' : 'bad')
-  + (hasGPU ? row('Max buffer', (limits.buf / 1048576).toFixed(0) + ' MB') + row('Max storage binding', (limits.stor / 1048576).toFixed(0) + ' MB') : '')
+  + (hasGPU ? row('Half-precision (shader-f16)', hasF16 ? 'Supported' : 'Not supported, this model cannot run here', hasF16 ? 'ok' : 'bad') + row('Max buffer', (limits.buf / 1048576).toFixed(0) + ' MB') + row('Max storage binding', (limits.stor / 1048576).toFixed(0) + ' MB') : '')
   + row('Cross-origin isolated', self.crossOriginIsolated ? 'Yes' : 'No');
 
-$('file').addEventListener('change', () => { $('run').disabled = !$('file').files.length || !hasGPU; $('stage').textContent = 'Ready.'; });
+$('file').addEventListener('change', () => { $('run').disabled = !$('file').files.length || !hasGPU || (!hasF16 && !params.has('force')); $('stage').textContent = 'Ready.'; });
 
 let stems = null, orig = null, actx = null, node = null;
 $('run').addEventListener('click', async () => {
@@ -115,7 +116,7 @@ $('run').addEventListener('click', async () => {
     log('ERROR ' + (e && e.stack ? e.stack : e));
     window.__gpuResult = { ok: false, error: String(e && e.message ? e.message : e) };
     window.__gpuDone = true;
-  } finally { $('run').disabled = !$('file').files.length; }
+  } finally { $('run').disabled = !$('file').files.length || !hasGPU || (!hasF16 && !params.has('force')); }
 });
 
 function stop() { try { node && node.stop(); } catch {} node = null; }
