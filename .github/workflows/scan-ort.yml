@@ -1,0 +1,42 @@
+name: Scan ONNX Runtime versions
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Scan
+        run: |
+          mkdir -p tools/ref /tmp/scan && cd /tmp/scan
+          OUT="$GITHUB_WORKSPACE/tools/ref/ort-scan.txt"
+          : > "$OUT"
+          node -e '
+            const v = JSON.parse(require("child_process").execSync("npm view onnxruntime-web versions --json").toString()).filter(x=>/^1\.\d+\.\d+$/.test(x));
+            const by = {}; for (const x of v) { const [a,b,c]=x.split("."); const k=a+"."+b; if(!by[k]||+c>+by[k].split(".")[2]) by[k]=x; }
+            console.log(Object.entries(by).filter(([k])=>+k.split(".")[1]>=22).map(([,x])=>x).join(" "));
+          ' > versions.txt
+          cat versions.txt >> "$OUT"
+          for v in $(cat versions.txt); do
+            mkdir -p "p-$v" && (cd "p-$v" && npm pack onnxruntime-web@$v >/dev/null 2>&1 && tar -xzf *.tgz) || { echo "$v: pack failed" >> "$OUT"; continue; }
+            d="p-$v/package/dist"
+            j=$(stat -c %s $d/ort-wasm-simd-threaded.jsep.wasm 2>/dev/null || echo none)
+            a=$(stat -c %s $d/ort-wasm-simd-threaded.asyncify.wasm 2>/dev/null || echo none)
+            p=$(stat -c %s $d/ort-wasm-simd-threaded.jspi.wasm 2>/dev/null || echo none)
+            f=$(grep -c "forceCpuNodeNames" $d/ort.webgpu.min.mjs 2>/dev/null || echo 0)
+            echo "$v jsep=$j asyncify=$a jspi=$p forceCpuNodeNames=$f webgpu_min=$(stat -c %s $d/ort.webgpu.min.mjs 2>/dev/null)" >> "$OUT"
+          done
+      - name: Commit
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add -f tools/ref
+          git commit -m "ORT version scan" || exit 0
+          git pull --rebase origin main
+          git push
