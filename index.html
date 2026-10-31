@@ -116,7 +116,37 @@ async function loadLibs() {
   ort.env.wasm.numThreads = self.crossOriginIsolated ? (navigator.hardwareConcurrency || 4) : 1;
 }
 
-const MODEL_URL = 'https://huggingface.co/timcsy/demucs-web-onnx/resolve/main/htdemucs_embedded.onnx';
+const MODEL_URLS = [
+  'https://huggingface.co/timcsy/demucs-web-onnx/resolve/main/htdemucs_embedded.onnx',
+  'https://huggingface.co/ptasior/pizu-audio-models/resolve/main/htdemucs_embedded.onnx',
+];
+async function fetchModel() {
+  let lastErr;
+  for (const url of MODEL_URLS) {
+    try {
+      log('Fetching model: ' + url);
+      const r = await fetch(url, { mode: 'cors' });
+      log('Response ' + r.status + ' ' + (r.url || ''));
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const total = +r.headers.get('content-length') || 180534758;
+      const reader = r.body.getReader();
+      const chunks = []; let got = 0;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value); got += value.length;
+        setProgress(Math.min(got / total, 1), `Model download ${(got/1048576).toFixed(0)} / ${(total/1048576).toFixed(0)} MB`);
+      }
+      const buf = new Uint8Array(got); let o = 0;
+      for (const c of chunks) { buf.set(c, o); o += c.length; }
+      return buf.buffer;
+    } catch (e) {
+      lastErr = e;
+      log('Model fetch failed: ' + (e && e.message ? e.message : e));
+    }
+  }
+  throw new Error('Could not download the model (' + (lastErr && lastErr.message) + ')');
+}
 let stems = null, origBuf = null, actx = null, srcNode = null;
 
 $('file').addEventListener('change', () => { $('run').disabled = !$('file').files.length; $('stage').textContent = $('file').files.length ? 'Ready.' : 'Waiting for a file.'; });
@@ -168,7 +198,9 @@ $('run').addEventListener('click', async () => {
         setProgress(progress, `Segment ${currentSegment} of ${totalSegments}` + (eta ? ` · about ${fmt(eta)} left` : ''));
       },
     });
-    await processor.loadModel(MODEL_URL);
+    const modelBuf = await fetchModel();
+    log('Model downloaded, starting session…');
+    await processor.loadModel(modelBuf);
     t.load = (performance.now() - t1) / 1000;
 
     $('stage').textContent = 'Separating stems…';
