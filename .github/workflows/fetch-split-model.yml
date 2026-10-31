@@ -1,0 +1,35 @@
+name: Fetch split model
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download the 21 pieces and check their sizes
+        run: |
+          set -euo pipefail
+          B=https://huggingface.co/monteslu/htdemucs-web-onnx/resolve/main
+          rm -rf model-split && mkdir model-split
+          curl -fsSL "$B/htdemucs_split_manifest.json" -o model-split/htdemucs_split_manifest.json
+          curl -fsSL "https://huggingface.co/api/models/monteslu/htdemucs-web-onnx/tree/main" -o /tmp/files.json
+          for i in $(seq -w 0 20); do
+            f=htdemucs_p$i.onnx
+            curl -fL --retry 3 "$B/$f" -o model-split/$f
+            want=$(python3 -c "import json;print([x['size'] for x in json.load(open('/tmp/files.json')) if x['path']=='$f'][0])")
+            got=$(stat -c %s model-split/$f)
+            [ "$want" = "$got" ] || { echo "$f size mismatch: want $want got $got"; exit 1; }
+            [ "$got" -lt 26000000 ] || { echo "$f is too large to host"; exit 1; }
+          done
+          du -sh model-split
+      - name: Commit
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add model-split
+          git commit -m "Add the 21-piece WebGPU model" || exit 0
+          git pull --rebase origin main
+          git push

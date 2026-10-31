@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E0F13">
+<title>Stemroom WebGPU test</title>
+<link rel="stylesheet" href="css/app.css">
+<style>
+  main { max-width: 640px; }
+  .row { display:flex; justify-content:space-between; gap:12px; padding:3px 0; font-size:14px; }
+  .row span:first-child { color:var(--mute); }
+  .ok { color:#2DD4BF; } .bad { color:var(--bad); }
+  pre { margin:0; font-size:11px; color:var(--mute); white-space:pre-wrap; word-break:break-word; max-height:220px; overflow:auto; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+  h2 { font-size:13px; font-weight:500; color:var(--mute); margin:0 0 8px; }
+  input[type=file] { width:100%; color:var(--text); }
+</style>
+</head>
+<body>
+<main>
+  <h1>WebGPU test</h1>
+  <p class="sub">Experimental. Runs the 21-piece GPU model on this device. Your main app is not affected. Nothing is uploaded.</p>
+
+  <div id="crash" class="card" style="display:none;border:1px solid var(--bad)">
+    <h2>Previous run did not finish</h2>
+    <div style="font-size:14px">The page stopped without a result, so Safari probably closed it. The last steps are below.</div>
+    <pre id="crash-log" style="margin-top:8px"></pre>
+  </div>
+
+  <div class="card"><h2>This device</h2><div id="env"></div></div>
+
+  <div class="card">
+    <h2>Test</h2>
+    <label class="field"><span>Song file you own</span><input id="file" type="file"></label>
+    <label class="field"><span>Seconds to process from the start</span><input id="secs" type="number" min="5" max="120" value="15" inputmode="numeric"></label>
+    <button class="btn primary wide" id="run" disabled>Run WebGPU test</button>
+  </div>
+
+  <div class="card">
+    <h2>Progress</h2>
+    <div id="stage" style="font-size:14px">Choose a file to begin.</div>
+    <div class="bar" style="margin-top:8px"><div id="fill"></div></div>
+  </div>
+
+  <div class="card" id="resCard" hidden>
+    <h2>Result</h2>
+    <div id="res"></div>
+    <div class="grid2">
+      <button class="btn" id="pDrumless">Play without drums</button>
+      <button class="btn" id="pDrums">Play drums only</button>
+      <button class="btn" id="pOrig">Play original</button>
+      <button class="btn" id="pStop">Stop</button>
+    </div>
+  </div>
+
+  <div class="card"><h2>Log</h2><pre id="log"></pre></div>
+  <p class="foot"><a href="./" style="color:var(--accent)">Back to Stemroom</a></p>
+</main>
+<script type="module" src="js/gpu-test.js"></script>
+</body>
+</html>

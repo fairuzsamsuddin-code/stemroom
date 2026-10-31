@@ -1,0 +1,34 @@
+name: WebGPU experiment check
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install
+        working-directory: tools
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Run the WebGPU page on a software GPU
+        continue-on-error: true
+        working-directory: tools
+        run: node e2e-gpu.mjs
+      - name: Commit the result
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add -f tools/ref/gpu-ci-result.json
+          git commit -m "WebGPU experiment CI result" || exit 0
+          git pull --rebase origin main
+          git push

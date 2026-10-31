@@ -25,9 +25,29 @@ const copies = [
 ];
 for (const [from, to] of copies) {
   const size = fs.statSync(path.join(dist, from)).size;
-  if (size > 24 * 1048576) throw new Error(from + ' is ' + (size / 1048576).toFixed(1) + ' MB, over the 25 MB hosting limit');
+  if (size > 25 * 1048576 - 4096) throw new Error(from + ' is ' + (size / 1048576).toFixed(1) + ' MB, over the 25 MB hosting limit');
   fs.copyFileSync(path.join(dist, from), path.join(ortOut, to));
 }
+
+// WebGPU experiment: second ONNX Runtime build (1.25.1) and the chained-session engine
+const gdist = path.join(here, 'node_modules/onnxruntime-web-gpu/dist');
+const gout = path.join(vendor, 'gpu', 'ort');
+fs.mkdirSync(gout, { recursive: true });
+console.log('gpu ort version', JSON.parse(fs.readFileSync(path.join(here, 'node_modules/onnxruntime-web-gpu/package.json'))).version);
+for (const f of ['ort.webgpu.min.mjs', 'ort-wasm-simd-threaded.jsep.mjs', 'ort-wasm-simd-threaded.jsep.wasm', 'ort-wasm-simd-threaded.asyncify.mjs', 'ort-wasm-simd-threaded.asyncify.wasm']) {
+  const src = path.join(gdist, f);
+  if (!fs.existsSync(src)) { console.log('missing in gpu ort:', f); continue; }
+  const size = fs.statSync(src).size;
+  console.log('  gpu', f, (size / 1048576).toFixed(1) + ' MB');
+  if (size > 25 * 1048576 - 4096) throw new Error(f + ' is over the 25 MB hosting limit');
+  fs.copyFileSync(src, path.join(gout, f));
+}
+await esbuild.build({
+  entryPoints: [path.join(root, 'src/gpu-engine.js')],
+  outfile: path.join(vendor, 'gpu-engine.js'),
+  bundle: true, format: 'esm', platform: 'browser', target: 'es2022', minify: true,
+  absWorkingDir: here, nodePaths: [path.join(here, 'node_modules')], logLevel: 'info',
+});
 
 await esbuild.build({
   entryPoints: [path.join(root, 'src/separate.worker.js')],
