@@ -1,0 +1,45 @@
+name: Inspect libraries
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Collect reference files
+        run: |
+          set -x
+          mkdir -p tools/ref && cd /tmp && mkdir pk && cd pk
+          npm pack demucs-web >/dev/null 2>&1 && mkdir dm && tar -xzf demucs-web-*.tgz -C dm
+          rm -rf /home/runner/work/ref && mkdir -p /home/runner/work/ref
+          cp -r dm/package /home/runner/work/ref/demucs-web
+          find /home/runner/work/ref/demucs-web -name "*.map" -delete
+          rm -rf "$GITHUB_WORKSPACE/tools/ref" && mkdir -p "$GITHUB_WORKSPACE/tools/ref"
+          cp -r /home/runner/work/ref/demucs-web "$GITHUB_WORKSPACE/tools/ref/demucs-web"
+          LATEST=$(npm view onnxruntime-web version)
+          echo "latest ort $LATEST" > "$GITHUB_WORKSPACE/tools/ref/ort-info.txt"
+          for v in 1.22.0 $LATEST; do
+            mkdir -p o-$v && cd o-$v && npm pack onnxruntime-web@$v >/dev/null 2>&1 && tar -xzf *.tgz && cd ..
+            echo "== onnxruntime-web $v" >> "$GITHUB_WORKSPACE/tools/ref/ort-info.txt"
+            ls -l o-$v/package/dist | awk '{print $5, $9}' | grep -E "webgpu|jsep|wasm" >> "$GITHUB_WORKSPACE/tools/ref/ort-info.txt"
+            echo "forceCpuNodeNames mentions in webgpu bundle:" >> "$GITHUB_WORKSPACE/tools/ref/ort-info.txt"
+            grep -c "forceCpuNodeNames" o-$v/package/dist/ort.webgpu.min.mjs >> "$GITHUB_WORKSPACE/tools/ref/ort-info.txt" || true
+            grep -o "forceCpuNodeNames[^;]\{0,120\}" o-$v/package/dist/ort.webgpu.min.mjs | head -3 >> "$GITHUB_WORKSPACE/tools/ref/ort-info.txt" || true
+          done
+          curl -fsSL "https://huggingface.co/monteslu/htdemucs-web-onnx/resolve/main/htdemucs_split_manifest.json" -o "$GITHUB_WORKSPACE/tools/ref/split-manifest.json"
+          curl -fsSL "https://huggingface.co/api/models/monteslu/htdemucs-web-onnx/tree/main" -o "$GITHUB_WORKSPACE/tools/ref/split-files.json"
+          curl -fsSL "https://huggingface.co/monteslu/htdemucs-web-onnx/resolve/main/README.md" -o "$GITHUB_WORKSPACE/tools/ref/split-README.md" || true
+      - name: Commit
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add -f tools/ref
+          git commit -m "Add reference files for the WebGPU experiment" || exit 0
+          git pull --rebase origin main
+          git push
