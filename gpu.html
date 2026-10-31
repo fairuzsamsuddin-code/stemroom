@@ -25,6 +25,7 @@
   <div id="crash" class="card" style="display:none;border:1px solid var(--bad)">
     <h2>Previous run did not finish</h2>
     <div style="font-size:14px">The page stopped without a result, so Safari probably closed it. The last steps are below.</div>
+    <div id="crash-where" style="margin-top:8px;font-size:14px;font-weight:600"></div>
     <pre id="crash-log" style="margin-top:8px"></pre>
   </div>
 
@@ -34,6 +35,7 @@
     <h2>Test</h2>
     <label class="field"><span>Song file you own</span><input id="file" type="file"></label>
     <label class="field"><span>Seconds to process from the start</span><input id="secs" type="number" min="5" max="120" value="15" inputmode="numeric"></label>
+    <label style="display:flex;gap:10px;align-items:flex-start;margin:6px 0 4px;font-size:14px"><input type="checkbox" id="lazy" style="margin-top:3px"><span>Low-memory mode: load one piece at a time (slower, uses less memory)</span></label>
     <button class="btn primary wide" id="run" disabled>Run WebGPU test</button>
   </div>
 

@@ -16,6 +16,7 @@ const setProgress = (p) => { $('fill').style.width = Math.round(p * 100) + '%'; 
 if (localStorage.getItem('stemroom_gpu_run') === 'started') {
   $('crash').style.display = 'block';
   $('crash-log').textContent = localStorage.getItem('stemroom_gpu_last') || '';
+  $('crash-where').textContent = localStorage.getItem('stemroom_gpu_where') || '';
   localStorage.removeItem('stemroom_gpu_run');
 }
 
@@ -40,7 +41,7 @@ let stems = null, orig = null, actx = null, node = null, tSep = 0;
 $('run').addEventListener('click', async () => {
   const f = $('file').files[0]; if (!f) return;
   $('run').disabled = true; $('resCard').hidden = true; logEl.textContent = '';
-  localStorage.setItem('stemroom_gpu_run', 'started');
+  localStorage.setItem('stemroom_gpu_run', 'started'); localStorage.removeItem('stemroom_gpu_where');
   const t = {};
   try {
     const SR = 44100;
@@ -62,7 +63,8 @@ $('run').addEventListener('click', async () => {
 
     const t0 = performance.now();
     const proc = await createGpuProcessor({
-      ort, modelBase: abs('model-split/'),
+      ort, modelBase: abs('model-split/'), lazy: $('lazy').checked,
+      onPiece: (run, i, n) => { try { localStorage.setItem('stemroom_gpu_where', 'Stopped while running piece ' + (i + 1) + ' of ' + n + ', segment ' + run + ($('lazy').checked ? ' (low-memory mode)' : '')); } catch {} },
       onStatus: (s, p) => { $('stage').textContent = s; setProgress(p); log(s); },
       onProgress: ({ progress, currentSegment, totalSegments }) => { setProgress(progress); $('stage').textContent = `Separating, segment ${currentSegment} of ${totalSegments}`; log(`Segment ${currentSegment}/${totalSegments} done at ${((performance.now() - tSep) / 1000).toFixed(1)} s`); },
     });
