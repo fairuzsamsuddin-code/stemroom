@@ -1,0 +1,12 @@
+1.22.0 1.23.2 1.24.3 1.25.1 1.26.0 1.27.0 1.29.0 1.30.0 1.31.1
+1.22.0 jsep=21872216 asyncify=none jspi=none forceCpuNodeNames=0
+0 webgpu_min=357582
+1.23.2 jsep=23824254 asyncify=25499390 jspi=none forceCpuNodeNames=0
+0 webgpu_min=66261
+1.24.3 jsep=25014754 asyncify=27190919 jspi=16894865 forceCpuNodeNames=1 webgpu_min=67100
+1.25.1 jsep=25906828 asyncify=23427852 jspi=14453460 forceCpuNodeNames=1 webgpu_min=67100
+1.26.0 jsep=26239907 asyncify=23678474 jspi=14625739 forceCpuNodeNames=1 webgpu_min=67191
+1.27.0 jsep=26827543 asyncify=24254953 jspi=15046878 forceCpuNodeNames=1 webgpu_min=67169
+1.29.0 jsep=27797172 asyncify=25749873 jspi=16025636 forceCpuNodeNames=1 webgpu_min=66348
+1.30.0 jsep=28312028 asyncify=26781914 jspi=16758545 forceCpuNodeNames=1 webgpu_min=66349
+1.31.1 jsep=29520971 asyncify=28747738 jspi=17920659 forceCpuNodeNames=1 webgpu_min=70742
