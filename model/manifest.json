@@ -1,0 +1,43 @@
+{
+  "name": "htdemucs_embedded.onnx",
+  "sha256": "e5e425c17683f163a472462eb5f5a4ffcd11c31858d57fbd0833b012d8b88077",
+  "size": 180534758,
+  "parts": [
+    {
+      "file": "htdemucs.part000",
+      "size": 20971520
+    },
+    {
+      "file": "htdemucs.part001",
+      "size": 20971520
+    },
+    {
+      "file": "htdemucs.part002",
+      "size": 20971520
+    },
+    {
+      "file": "htdemucs.part003",
+      "size": 20971520
+    },
+    {
+      "file": "htdemucs.part004",
+      "size": 20971520
+    },
+    {
+      "file": "htdemucs.part005",
+      "size": 20971520
+    },
+    {
+      "file": "htdemucs.part006",
+      "size": 20971520
+    },
+    {
+      "file": "htdemucs.part007",
+      "size": 20971520
+    },
+    {
+      "file": "htdemucs.part008",
+      "size": 12762598
+    }
+  ]
+}
