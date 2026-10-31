@@ -1,0 +1,55 @@
+name: Fetch model
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download, verify and split the model
+        run: |
+          set -euo pipefail
+          EXPECTED=e5e425c17683f163a472462eb5f5a4ffcd11c31858d57fbd0833b012d8b88077
+          URLS=(
+            "https://huggingface.co/timcsy/demucs-web-onnx/resolve/main/htdemucs_embedded.onnx"
+            "https://huggingface.co/ptasior/pizu-audio-models/resolve/main/htdemucs_embedded.onnx"
+          )
+          ok=0
+          for u in "${URLS[@]}"; do
+            echo "Trying $u"
+            if curl -fL --retry 3 -o htdemucs_embedded.onnx "$u"; then
+              got=$(sha256sum htdemucs_embedded.onnx | cut -d' ' -f1)
+              echo "sha256 $got"
+              if [ "$got" = "$EXPECTED" ]; then ok=1; break; fi
+              echo "Checksum did not match, trying next source"
+            fi
+          done
+          [ "$ok" = 1 ] || { echo "No source matched the expected checksum"; exit 1; }
+
+          rm -rf model && mkdir model
+          split -b 20M -d -a 3 htdemucs_embedded.onnx model/htdemucs.part
+          python3 - <<'PY'
+          import json, os
+          parts = sorted(f for f in os.listdir('model') if f.startswith('htdemucs.part'))
+          json.dump({
+            "name": "htdemucs_embedded.onnx",
+            "sha256": "e5e425c17683f163a472462eb5f5a4ffcd11c31858d57fbd0833b012d8b88077",
+            "size": sum(os.path.getsize('model/'+p) for p in parts),
+            "parts": [{"file": p, "size": os.path.getsize('model/'+p)} for p in parts],
+          }, open('model/manifest.json', 'w'), indent=2)
+          PY
+          ls -l model
+          rm htdemucs_embedded.onnx
+
+      - name: Commit model parts
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add model
+          git commit -m "Add HTDemucs model parts" || echo "Nothing to commit"
+          git push

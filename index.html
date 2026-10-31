@@ -120,7 +120,30 @@ const MODEL_URLS = [
   'https://huggingface.co/timcsy/demucs-web-onnx/resolve/main/htdemucs_embedded.onnx',
   'https://huggingface.co/ptasior/pizu-audio-models/resolve/main/htdemucs_embedded.onnx',
 ];
-async function fetchModel() {
+async function fetchLocalModel() {
+  const mr = await fetch('model/manifest.json', { cache: 'no-cache' });
+  if (!mr.ok) throw new Error('manifest HTTP ' + mr.status);
+  const man = await mr.json();
+  if (!man.parts || !man.parts.length) throw new Error('empty manifest');
+  const out = new Uint8Array(man.size);
+  let o = 0;
+  const cache = ('caches' in self) ? await caches.open('stemroom-model-v1') : null;
+  for (let i = 0; i < man.parts.length; i++) {
+    const url = 'model/' + man.parts[i].file;
+    let r = cache ? await cache.match(url) : null;
+    if (!r) {
+      r = await fetch(url);
+      if (!r.ok) throw new Error(url + ' HTTP ' + r.status);
+      if (cache) { try { await cache.put(url, r.clone()); } catch (e) { log('Cache skipped: ' + e.message); } }
+    }
+    const part = new Uint8Array(await r.arrayBuffer());
+    out.set(part, o); o += part.length;
+    setProgress((i + 1) / man.parts.length, `Model part ${i + 1} of ${man.parts.length}`);
+  }
+  if (o !== man.size) throw new Error('size mismatch');
+  return out.buffer;
+}
+async function fetchRemoteModel() {
   let lastErr;
   for (const url of MODEL_URLS) {
     try {
@@ -147,6 +170,16 @@ async function fetchModel() {
   }
   throw new Error('Could not download the model (' + (lastErr && lastErr.message) + ')');
 }
+async function fetchModel() {
+  try {
+    log('Loading model from this site');
+    return await fetchLocalModel();
+  } catch (e) {
+    log('Local model not available (' + (e && e.message ? e.message : e) + '), trying Hugging Face');
+    return await fetchRemoteModel();
+  }
+}
+
 let stems = null, origBuf = null, actx = null, srcNode = null;
 
 $('file').addEventListener('change', () => { $('run').disabled = !$('file').files.length; $('stage').textContent = $('file').files.length ? 'Ready.' : 'Waiting for a file.'; });
