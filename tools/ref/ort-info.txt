@@ -1,0 +1,53 @@
+latest ort 1.31.1
+== onnxruntime-web 1.22.0
+44677 ort-wasm-simd-threaded.jsep.mjs
+21872216 ort-wasm-simd-threaded.jsep.wasm
+20856 ort-wasm-simd-threaded.mjs
+11210254 ort-wasm-simd-threaded.wasm
+48273 ort.wasm.bundle.min.mjs
+308025 ort.wasm.bundle.min.mjs.map
+557942 ort.wasm.js
+48327 ort.wasm.min.js
+308033 ort.wasm.min.js.map
+48259 ort.wasm.min.mjs
+308025 ort.wasm.min.mjs.map
+550214 ort.wasm.mjs
+400898 ort.webgpu.bundle.min.mjs
+1474736 ort.webgpu.bundle.min.mjs.map
+2578988 ort.webgpu.js
+357648 ort.webgpu.min.js
+1360513 ort.webgpu.min.js.map
+357582 ort.webgpu.min.mjs
+1360509 ort.webgpu.min.mjs.map
+2547332 ort.webgpu.mjs
+forceCpuNodeNames mentions in webgpu bundle:
+0
+== onnxruntime-web 1.31.1
+53457 ort-wasm-simd-threaded.asyncify.mjs
+28747738 ort-wasm-simd-threaded.asyncify.wasm
+47250 ort-wasm-simd-threaded.jsep.mjs
+29520971 ort-wasm-simd-threaded.jsep.wasm
+51321 ort-wasm-simd-threaded.jspi.mjs
+17920659 ort-wasm-simd-threaded.jspi.wasm
+24738 ort-wasm-simd-threaded.mjs
+14848852 ort-wasm-simd-threaded.wasm
+77024 ort.wasm.bundle.min.mjs
+414141 ort.wasm.bundle.min.mjs.map
+632080 ort.wasm.js
+53796 ort.wasm.min.js
+348793 ort.wasm.min.js.map
+53725 ort.wasm.min.mjs
+348745 ort.wasm.min.mjs.map
+623434 ort.wasm.mjs
+122491 ort.webgpu.bundle.min.mjs
+542899 ort.webgpu.bundle.min.mjs.map
+735137 ort.webgpu.js
+70811 ort.webgpu.min.js
+405567 ort.webgpu.min.js.map
+70742 ort.webgpu.min.mjs
+405520 ort.webgpu.min.mjs.map
+724785 ort.webgpu.mjs
+forceCpuNodeNames mentions in webgpu bundle:
+1
+forceCpuNodeNames){let h=Array.isArray(b.forceCpuNodeNames)?b.forceCpuNodeNames:[b.forceCpuNodeNames]
+forceCpuNodeNames",h.join(`
