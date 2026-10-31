@@ -6,8 +6,20 @@ import { leanSeparate } from './lean.js';
 const CPU_NODES = ['/ReduceMean', '/Sub', '/Pow', '/ReduceMean_1', '/Clip', '/Sqrt', '/Add', '/Div',
   '/ReduceMean_2', '/Sub_1', '/Pow_1', '/ReduceMean_3', '/Clip_1', '/Sqrt_1', '/Add_1', '/Div_1'];
 
+async function readBuffer(device, src, offset, size) {
+  const staging = device.createBuffer({ size, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST });
+  const enc = device.createCommandEncoder();
+  enc.copyBufferToBuffer(src, offset, staging, 0, size);
+  device.queue.submit([enc.finish()]);
+  await staging.mapAsync(GPUMapMode.READ);
+  const out = new Float32Array(staging.getMappedRange().slice(0));
+  staging.unmap(); staging.destroy();
+  return out;
+}
+
 class ChainedSession {
-  constructor(sessions, manifest, make, onPiece) {
+  constructor(sessions, manifest, make, onPiece, ort) {
+    this.ort = ort;
     this.sessions = sessions;      // null in low-memory mode
     this.make = make;              // (i) => Promise<InferenceSession>
     this.onPiece = onPiece || (() => {});
@@ -50,8 +62,20 @@ class ChainedSession {
     const res = {};
     for (const n of this.finalNames) {
       const t = map[n];
+      if (n === this.finalNames[0] && t.location === 'gpu-buffer') {
+        // The frequency output is large (44 MB). Hand it out one stem at a time, straight from the GPU.
+        let device = null;
+        try { device = await this.ort.env.webgpu.device; } catch {}
+        const perBytes = t.dims[2] * t.dims[3] * t.dims[4] * 4;
+        if (device && t.gpuBuffer) {
+          res[n] = { dims: t.dims, track: (k) => readBuffer(device, t.gpuBuffer, k * perBytes, perBytes), dispose: () => { try { t.dispose(); } catch {} } };
+          continue;
+        }
+        res[n] = { dims: t.dims, data: await t.getData(), dispose: () => { try { t.dispose(); } catch {} } };
+        continue;
+      }
       const data = t.location && t.location !== 'cpu' ? await t.getData() : t.data;
-      res[n] = { dims: t.dims, data };
+      res[n] = { dims: t.dims, data, dispose: () => {} };
     }
     return res;
   }
@@ -64,6 +88,7 @@ export async function createGpuProcessor({ ort, modelBase, onStatus = () => {}, 
   const cache = self.caches ? await caches.open('stemroom-model') : null;
   const total = manifest.pieces.length;
   const finalProducers = new Set();
+  const freqPiece = manifest.pieces.findIndex((p) => p.outputs.includes(manifest.outputs.freq));
   manifest.pieces.forEach((p, i) => { if (p.outputs.some((n) => [manifest.outputs.freq, manifest.outputs.time].includes(n))) finalProducers.add(i); });
   const bytesOf = async (i) => {
     const url = modelBase + manifest.pieces[i].file;
@@ -80,7 +105,7 @@ export async function createGpuProcessor({ ort, modelBase, onStatus = () => {}, 
     const opts = {
       executionProviders: [i === 0 ? { name: 'webgpu', forceCpuNodeNames: CPU_NODES } : 'webgpu'],
       graphOptimizationLevel: 'all',
-      preferredOutputLocation: finalProducers.has(i) ? 'cpu' : 'gpu-buffer',
+      preferredOutputLocation: i === freqPiece ? 'gpu-buffer' : finalProducers.has(i) ? 'cpu' : 'gpu-buffer',
     };
     try { return await ort.InferenceSession.create(await bytesOf(i), opts); }
     catch (e) { throw new Error('Piece ' + i + ' (' + p.file + ') failed to load: ' + (e && e.message ? e.message : e)); }
@@ -93,7 +118,7 @@ export async function createGpuProcessor({ ort, modelBase, onStatus = () => {}, 
     for (let i = 0; i < total; i++) { onStatus('Loading piece ' + (i + 1) + ' of ' + total, i / total); sessions.push(await make(i)); }
   }
   onStatus('Model ready', 1);
-  const session = new ChainedSession(sessions, manifest, make, onPiece);
+  const session = new ChainedSession(sessions, manifest, make, onPiece, ort);
   return {
     session,
     separate: (left, right, opts = {}) => leanSeparate({ session, ort, left, right, onProgress, pauseMs: opts.pauseMs || 0 }),

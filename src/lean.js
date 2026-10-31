@@ -33,11 +33,11 @@ export async function leanSeparate({ session, ort, left, right, onProgress = () 
     input = null;
     const res = await session.run(feeds);
 
-    let timeData = null, timeShape = null, freqData = null;
+    let timeData = null, timeShape = null, freqT = null;
     for (const name of session.outputNames) {
       const t = res[name];
       if (t.dims.length === 4 && t.dims[2] === 2) { timeData = t.data; timeShape = t.dims; }
-      else if (t.dims.length === 5 && t.dims[2] === 4) freqData = t.data;
+      else if (t.dims.length === 5 && t.dims[2] === 4) freqT = t;
     }
     if (!timeData) throw new Error('Could not find the time-domain output');
     const samples = timeShape[3];
@@ -47,8 +47,9 @@ export async function leanSeparate({ session, ort, left, right, onProgress = () 
 
     for (let t = 0; t < 4; t++) {
       let fl = null, fr = null;
-      if (freqData) {
-        const base = t * 4 * B * F;
+      if (freqT) {
+        const freqData = freqT.track ? await freqT.track(t) : freqT.data;
+        const base = freqT.track ? 0 : t * 4 * B * F;
         for (let c = 0; c < 2; c++) {
           re[c].fill(0); im[c].fill(0);
           const reOff = base + (c * 2) * B * F, imOff = base + (c * 2 + 1) * B * F;
@@ -62,8 +63,8 @@ export async function leanSeparate({ session, ort, left, right, onProgress = () 
       }
       const tl = t * 2 * samples, tr = tl + samples;
       for (let i = 0; i < segLen && start + i < total; i++) {
-        const l = freqData ? timeData[tl + i] + (fl[offset + i] || 0) : timeData[tl + i];
-        const r = freqData ? timeData[tr + i] + (fr[offset + i] || 0) : timeData[tr + i];
+        const l = freqT ? timeData[tl + i] + (fl[offset + i] || 0) : timeData[tl + i];
+        const r = freqT ? timeData[tr + i] + (fr[offset + i] || 0) : timeData[tr + i];
         outL[t][start + i] += l * win[i];
         outR[t][start + i] += r * win[i];
       }
