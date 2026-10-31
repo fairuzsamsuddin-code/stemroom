@@ -47,6 +47,11 @@
   <input id="file" type="file">
   <label for="secs">Seconds to process from the start</label>
   <input id="secs" type="number" min="10" max="600" value="30">
+  <label for="eng">Engine</label>
+  <select id="eng" style="width:100%;background:#0E0F13;color:#F2F2F4;border:1px solid #2E3140;border-radius:10px;padding:10px;font-size:14px">
+    <option value="webgpu">WebGPU (fast)</option>
+    <option value="wasm">CPU only (slow, uses less GPU memory)</option>
+  </select>
   <div style="height:12px"></div>
   <button id="run" disabled>Run test</button>
 </div>
@@ -225,7 +230,7 @@ $('run').addEventListener('click', async () => {
     const processor = new DemucsProcessor({
       ort,
       sessionOptions: {
-        executionProviders: hasWebGPU ? ['webgpu', 'wasm'] : ['wasm'],
+        executionProviders: (hasWebGPU && $('eng').value === 'webgpu') ? ['webgpu', 'wasm'] : ['wasm'],
         enableCpuMemArena: false,
         enableMemPattern: false,
       },
@@ -248,7 +253,7 @@ $('run').addEventListener('click', async () => {
     setProgress(0, '');
     const t2 = performance.now();
     tSep = t2;
-    log('Separating…');
+    log('Separating with ' + $('eng').value + '…');
     const result = await processor.separate(left, right);
     t.sep = (performance.now() - t2) / 1000;
     setProgress(1, 'Done');
@@ -258,7 +263,7 @@ $('run').addEventListener('click', async () => {
     const rtf = t.sep / secs;
     const full3 = rtf * 180;
     $('res').innerHTML =
-      row('Engine', hasWebGPU ? 'WebGPU' : 'CPU (WASM)') +
+      row('Engine', (hasWebGPU && $('eng').value === 'webgpu') ? 'WebGPU' : 'CPU (WASM)') +
       row('Model download + load', fmt(t.load)) +
       row(`Separation of ${secs.toFixed(0)} s`, fmt(t.sep), 'ok') +
       row('Speed', rtf < 1 ? (1/rtf).toFixed(1) + 'x faster than real time' : rtf.toFixed(1) + 'x slower than real time') +
