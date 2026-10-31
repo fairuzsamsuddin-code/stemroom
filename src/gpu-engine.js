@@ -121,6 +121,6 @@ export async function createGpuProcessor({ ort, modelBase, onStatus = () => {}, 
   const session = new ChainedSession(sessions, manifest, make, onPiece, ort);
   return {
     session,
-    separate: (left, right, opts = {}) => leanSeparate({ session, ort, left, right, onProgress, pauseMs: opts.pauseMs || 0 }),
+    separate: (left, right, opts = {}) => leanSeparate({ session, ort, left, right, onProgress, pauseMs: opts.pauseMs || 0, shouldStop: opts.shouldStop }),
   };
 }

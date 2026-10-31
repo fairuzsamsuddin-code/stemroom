@@ -62,6 +62,8 @@
           <label class="field"><span>Start (seconds)</span><input id="in-start" type="number" min="0" step="1" inputmode="numeric"></label>
           <label class="field"><span>End (seconds)</span><input id="in-end" type="number" min="1" step="1" inputmode="numeric"></label>
         </div>
+        <label class="field"><span>Engine</span>
+          <select id="in-engine"><option value="auto">Automatic</option><option value="gpu">Fast (uses the GPU)</option><option value="cpu">Compatible (slower)</option></select></label>
         <p class="hint" id="add-estimate"></p>
         <button class="btn primary wide" id="btn-sep">Separate stems</button>
       </div>

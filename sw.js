@@ -18,13 +18,13 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const req = e.request, url = new URL(req.url);
   if (req.method !== 'GET' || url.origin !== location.origin) return;
-  if (url.pathname.includes('/model/')) {
+  if (url.pathname.includes('/model/') || url.pathname.includes('/model-split/')) {
     e.respondWith((async () => {
       const c = await caches.open(MODEL);
       const hit = await c.match(req);
       if (hit) return hit;
       const r = await fetch(req);
-      if (r.ok && url.pathname.includes('.part')) c.put(req, r.clone());
+      if (r.ok && /\.part|\.onnx/.test(url.pathname)) c.put(req, r.clone());
       return r;
     })());
     return;

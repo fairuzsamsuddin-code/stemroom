@@ -346,13 +346,31 @@ $('btn-back').addEventListener('click', () => {
   show('lib'); renderLibrary();
 });
 
-function estRate() { return +localStorage.getItem('stemroom_rate') || (crossOriginIsolated ? 1.5 : 2.2); }
+let gpuOK = false;
+async function detectGpu() {
+  try {
+    if (!navigator.gpu) return false;
+    const ad = await navigator.gpu.requestAdapter();
+    return !!(ad && ad.features.has('shader-f16'));
+  } catch { return false; }
+}
+function chosenEngine() {
+  const v = $('in-engine').value;
+  if (v === 'gpu') return gpuOK ? 'gpu' : 'cpu';
+  if (v === 'cpu') return 'cpu';
+  return gpuOK && !localStorage.getItem('stemroom_force_cpu') ? 'gpu' : 'cpu';
+}
+function estRate() {
+  if (chosenEngine() === 'gpu') return +localStorage.getItem('stemroom_rate_gpu') || 0.55;
+  return +localStorage.getItem('stemroom_rate') || (crossOriginIsolated ? 1.5 : 2.2);
+}
 function updateEstimate() {
   const s = +$('in-start').value || 0, e = +$('in-end').value || 0;
   const len = Math.max(0, e - s);
   $('add-estimate').textContent = len ? `${fmtLong(len)} of audio. Expect about ${fmtLong(len * estRate())} to separate on this device.` : '';
   $('btn-sep').disabled = len < 5;
 }
+$('in-engine').addEventListener('change', updateEstimate);
 $('in-start').addEventListener('input', updateEstimate);
 $('in-end').addEventListener('input', updateEstimate);
 
@@ -470,6 +488,29 @@ function runWorker(left, right, threads, token) {
   });
 }
 
+async function runGpu(left, right, token) {
+  const abs = (p) => new URL(p, location.href).href;
+  const ort = await import(abs('vendor/gpu/ort/ort.webgpu.min.mjs'));
+  ort.env.wasm.wasmPaths = abs('vendor/gpu/ort/');
+  ort.env.wasm.numThreads = 1;
+  const { createGpuProcessor } = await import(abs('vendor/gpu-engine.js'));
+  const ui = (fn) => { if (token === state.sepToken) fn(); };
+  let t0 = 0;
+  const proc = await createGpuProcessor({
+    ort, modelBase: abs('model-split/'),
+    onStatus: (t, p) => ui(() => { $('prog-title').textContent = /^Loading|^Checking/.test(t) ? 'Loading the model (first time only)' : t; $('prog-fill').style.width = Math.round(p * 100) + '%'; $('prog-pct').textContent = t; }),
+    onProgress: ({ progress }) => ui(() => {
+      if (!t0) t0 = performance.now();
+      const p = Math.min(1, progress), el = (performance.now() - t0) / 1000;
+      $('prog-title').textContent = 'Separating stems';
+      $('prog-fill').style.width = Math.round(p * 100) + '%'; $('prog-pct').textContent = Math.round(p * 100) + '%';
+      $('prog-eta').textContent = p > 0.1 && p < 1 ? 'About ' + fmtLong(el / p - el) + ' left' : '';
+    }),
+  });
+  try { return await proc.separate(left, right, { pauseMs: 40, shouldStop: () => token !== state.sepToken }); }
+  finally { try { await proc.session.release(); } catch {} }
+}
+
 $('btn-sep').addEventListener('click', async () => {
   const dec = state.decoded; if (!dec) return;
   const s0 = Math.max(0, Math.floor((+$('in-start').value || 0) * SR));
@@ -488,17 +529,31 @@ $('btn-sep').addEventListener('click', async () => {
   const t0 = performance.now();
   try {
     const threads = crossOriginIsolated ? Math.min(4, navigator.hardwareConcurrency || 4) : 1;
-    let res;
-    try { const [l, r] = slice(); res = await runWorker(l, r, threads, token); }
-    catch (err) {
-      if (token !== state.sepToken) return;
-      if (threads === 1) throw err;
-      toast('Retrying with one thread…');
-      const [l, r] = slice(); res = await runWorker(l, r, 1, token);
+    let res, used = 'cpu';
+    if (chosenEngine() === 'gpu') {
+      localStorage.setItem('stemroom_gpu_run', '1');
+      try { const [l, r] = slice(); res = await runGpu(l, r, token); used = 'gpu'; }
+      catch (err) {
+        if (token !== state.sepToken) return;
+        console.error('GPU engine failed', err);
+        toast('The fast engine failed here, so Stemroom is using the compatible one.', true);
+        localStorage.setItem('stemroom_force_cpu', '1');
+      }
+      localStorage.removeItem('stemroom_gpu_run');
     }
+    if (!res) {
+      try { const [l, r] = slice(); res = await runWorker(l, r, threads, token); }
+      catch (err) {
+        if (token !== state.sepToken) return;
+        if (threads === 1) throw err;
+        toast('Retrying with one thread…');
+        const [l, r] = slice(); res = await runWorker(l, r, 1, token);
+      }
+    }
+    window.__engineUsed = used;
     if (token !== state.sepToken) return;
     const secs = (e0 - s0) / SR;
-    localStorage.setItem('stemroom_rate', String(((performance.now() - t0) / 1000 / secs).toFixed(2)));
+    localStorage.setItem(used === 'gpu' ? 'stemroom_rate_gpu' : 'stemroom_rate', String(((performance.now() - t0) / 1000 / secs).toFixed(2)));
     $('prog-title').textContent = 'Saving to your library'; $('prog-fill').style.width = '100%'; $('prog-eta').textContent = '';
 
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -523,6 +578,11 @@ $('btn-sep').addEventListener('click', async () => {
 });
 
 /* ---------- boot ---------- */
+if (localStorage.getItem('stemroom_gpu_run')) {
+  localStorage.removeItem('stemroom_gpu_run'); localStorage.setItem('stemroom_force_cpu', '1');
+  setTimeout(() => toast('The fast engine stopped last time, so Stemroom will use the compatible engine. You can pick the fast one again when adding a song.', true), 600);
+}
+detectGpu().then((ok) => { gpuOK = ok; updateEstimate(); });
 $('btn-add').innerHTML = ICONS.plus + 'Add song';
 $('btn-back').innerHTML = ICONS.back;
 $('btn-b10').innerHTML = ICONS.rew; $('btn-f10').innerHTML = ICONS.fwd;

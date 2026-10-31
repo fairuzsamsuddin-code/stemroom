@@ -5,10 +5,10 @@ import { CONSTANTS, istft, prepareModelInput } from 'demucs-web';
 const { FFT_SIZE, HOP_SIZE, TRAINING_SAMPLES: T, MODEL_SPEC_BINS: B, MODEL_SPEC_FRAMES: F, SEGMENT_OVERLAP } = CONSTANTS;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-export async function leanSeparate({ session, ort, left, right, onProgress = () => {}, pauseMs = 0 }) {
+export async function leanSeparate({ session, ort, left, right, onProgress = () => {}, pauseMs = 0, shouldStop = () => false }) {
   const total = left.length;
   const stride = Math.floor(T * (1 - SEGMENT_OVERLAP));
-  const numSegments = Math.ceil((total - T) / stride) + 1;
+  const numSegments = Math.max(1, Math.ceil(total / stride));
   const outL = [0, 1, 2, 3].map(() => new Float32Array(total));
   const outR = [0, 1, 2, 3].map(() => new Float32Array(total));
   const weights = new Float32Array(total);
@@ -22,6 +22,7 @@ export async function leanSeparate({ session, ort, left, right, onProgress = () 
   let seg = 0;
 
   for (let start = 0; start < total; start += stride) {
+    if (shouldStop()) throw new Error('cancelled');
     const segLen = Math.min(start + T, total) - start;
     segL.fill(0); segR.fill(0);
     for (let i = 0; i < segLen; i++) { segL[i] = left[start + i]; segR[i] = right[start + i]; }
