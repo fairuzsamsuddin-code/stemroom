@@ -1,0 +1,16 @@
+{
+  "started": "2026-10-31T07:56:35.260Z",
+  "hasWebGPU": true,
+  "env": "WebGPU\nYes (google swiftshader)\nMax buffer\n1024 MB\nMax storage binding\n1024 MB\nCross-origin isolated\nYes",
+  "page": {
+    "ok": false,
+    "error": "failed to call OrtRun(). ERROR_CODE: 1, ERROR_MESSAGE: Non-zero status code returned while running Cast node. Name:'/encoder.0/conv/Conv_output_0_cast_to_fp16_node' Status Message: shader_helper.cc:401 GenerateSourceCode Program Cast requires f16 but the device does not support it."
+  },
+  "log": "Decoding ci.wav\nImporting ONNX Runtime (WebGPU build)\nONNX Runtime 1.25.1\nLoading piece 1 of 21\nLoading piece 2 of 21\nLoading piece 3 of 21\nLoading piece 4 of 21\nLoading piece 5 of 21\nLoading piece 6 of 21\nLoading piece 7 of 21\nLoading piece 8 of 21\nLoading piece 9 of 21\nLoading piece 10 of 21\nLoading piece 11 of 21\nLoading piece 12 of 21\nLoading piece 13 of 21\nLoading piece 14 of 21\nLoading piece 15 of 21\nLoading piece 16 of 21\nLoading piece 17 of 21\nLoading piece 18 of 21\nLoading piece 19 of 21\nLoading piece 20 of 21\nLoading piece 21 of 21\nModel ready\nModel loaded in 2.7 s\nERROR Error: failed to call OrtRun(). ERROR_CODE: 1, ERROR_MESSAGE: Non-zero status code returned while running Cast node. Name:'/encoder.0/conv/Conv_output_0_cast_to_fp16_node' Status Message: shader_helper.cc:401 GenerateSourceCode Program Cast requires f16 but the device does not support it.\n    at E (http://127.0.0.1:40401/vendor/gpu/ort/ort.webgpu.min.mjs:6:26247)\n    at Re (http://127.0.0.1:40401/vendor/gpu/ort/ort.webgpu.min.mjs:7:28894)\n    at async Ze.run (http://127.0.0.1:40401/vendor/gpu/ort/ort.webgpu.min.mjs:7:36433)\n    at async t.run (http://127.0.0.1:40401/vendor/gpu/ort/ort.webgpu.min.mjs:6:18251)\n    at async J.run (http://127.0.0.1:40401/vendor/gpu-engine.js:1:8015)\n    at async U.separate (http://127.0.0.1:40401/vendor/gpu-engine.js:1:5947)\n    at async HTMLButtonElement.<anonymous> (http://127.0.0.1:40401/js/gpu-test.js:74:17)\n",
+  "console": [
+    "error: \u001b[0;93m2026-10-31 07:56:37.806410 [W:onnxruntime:, session_state.cc:1359 VerifyEachNodeIsAssignedToAnEp] Some nodes were not assigned to the preferred execution providers which may or may not have an negative impact on performance. e.g. ORT explicitly assigns shape related ops to CPU to improve perf.\u001b[m",
+    "error: \u001b[0;93m2026-10-31 07:56:37.808585 [W:onnxruntime:, session_state.cc:1361 VerifyEachNodeIsAssignedToAnEp] Rerunning with verbose output on a non-minimal build will show node assignments.\u001b[m",
+    "error: \u001b[1;31m2026-10-31 07:56:40.777110 [E:onnxruntime:, sequential_executor.cc:614 ExecuteKernel] Non-zero status code returned while running Cast node. Name:'/encoder.0/conv/Conv_output_0_cast_to_fp16_node' Status Message: shader_helper.cc:401 GenerateSourceCode Program Cast requires f16 but the device does not support it.\u001b[m"
+  ],
+  "finished": "2026-10-31T07:56:40.800Z"
+}
