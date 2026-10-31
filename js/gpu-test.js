@@ -36,7 +36,7 @@ $('env').innerHTML = row('WebGPU', hasGPU ? 'Yes (' + adapterInfo + ')' : 'No', 
 
 $('file').addEventListener('change', () => { $('run').disabled = !$('file').files.length || !hasGPU || (!hasF16 && !params.has('force')); $('stage').textContent = 'Ready.'; });
 
-let stems = null, orig = null, actx = null, node = null;
+let stems = null, orig = null, actx = null, node = null, tSep = 0;
 $('run').addEventListener('click', async () => {
   const f = $('file').files[0]; if (!f) return;
   $('run').disabled = true; $('resCard').hidden = true; logEl.textContent = '';
@@ -64,15 +64,14 @@ $('run').addEventListener('click', async () => {
     const proc = await createGpuProcessor({
       ort, modelBase: abs('model-split/'),
       onStatus: (s, p) => { $('stage').textContent = s; setProgress(p); log(s); },
-      onProgress: ({ progress, currentSegment, totalSegments }) => { setProgress(progress); $('stage').textContent = `Separating, segment ${currentSegment} of ${totalSegments}`; log(`Segment ${currentSegment}/${totalSegments} done`); },
-      onLog: (a, b) => log(`[${a}] ${b}`),
+      onProgress: ({ progress, currentSegment, totalSegments }) => { setProgress(progress); $('stage').textContent = `Separating, segment ${currentSegment} of ${totalSegments}`; log(`Segment ${currentSegment}/${totalSegments} done at ${((performance.now() - tSep) / 1000).toFixed(1)} s`); },
     });
     t.load = (performance.now() - t0) / 1000;
     log('Model loaded in ' + t.load.toFixed(1) + ' s');
 
     $('stage').textContent = 'Separating'; setProgress(0);
-    const t1 = performance.now();
-    const res = await proc.separate(left, right);
+    const t1 = performance.now(); tSep = t1;
+    const res = await proc.separate(left, right, { pauseMs: params.has('nopause') ? 0 : 40 });
     t.sep = (performance.now() - t1) / 1000;
     stems = res;
 

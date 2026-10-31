@@ -37,6 +37,10 @@ jobs:
         working-directory: tools
         run: node build.mjs
 
+      - name: Lean separator matches the original
+        working-directory: tools
+        run: node test-lean.mjs
+
       - name: App test with stand-in separator
         working-directory: tools
         run: node e2e.mjs

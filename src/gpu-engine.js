@@ -1,6 +1,6 @@
 // Experimental WebGPU engine: runs the 21-piece mixed-precision HTDemucs (monteslu/htdemucs-web-onnx)
 // as a chain of ONNX sessions, plugged into demucs-web's STFT / overlap-add pipeline.
-import { DemucsProcessor } from 'demucs-web';
+import { leanSeparate } from './lean.js';
 
 // Piece 0 starts with a normalisation step that gives NaN on the WebGPU provider unless pinned to the CPU.
 const CPU_NODES = ['/ReduceMean', '/Sub', '/Pow', '/ReduceMean_1', '/Clip', '/Sqrt', '/Add', '/Div',
@@ -51,7 +51,7 @@ class ChainedSession {
   async release() { for (const s of this.sessions) { try { await s.release(); } catch {} } }
 }
 
-export async function createGpuProcessor({ ort, modelBase, onStatus = () => {}, onProgress = () => {}, onLog = () => {} }) {
+export async function createGpuProcessor({ ort, modelBase, onStatus = () => {}, onProgress = () => {} }) {
   if (!('gpu' in navigator)) throw new Error('This browser has no WebGPU');
   const manifest = await (await fetch(modelBase + 'htdemucs_split_manifest.json', { cache: 'no-cache' })).json();
   const cache = self.caches ? await caches.open('stemroom-model') : null;
@@ -79,7 +79,9 @@ export async function createGpuProcessor({ ort, modelBase, onStatus = () => {}, 
     catch (e) { throw new Error('Piece ' + i + ' (' + p.file + ') failed to load: ' + (e && e.message ? e.message : e)); }
   }
   onStatus('Model ready', 1);
-  const proc = new DemucsProcessor({ ort, onProgress, onLog });
-  proc.session = new ChainedSession(sessions, manifest);
-  return proc;
+  const session = new ChainedSession(sessions, manifest);
+  return {
+    session,
+    separate: (left, right, opts = {}) => leanSeparate({ session, ort, left, right, onProgress, pauseMs: opts.pauseMs || 0 }),
+  };
 }
