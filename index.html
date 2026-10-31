@@ -4,307 +4,115 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0E0F13">
-<title>Stemroom speed test</title>
-<style>
-  :root { --bg:#0E0F13; --card:#181A20; --line:#2E3140; --text:#F2F2F4; --mute:#8B8E99; --accent:#FF5A3C; --ok:#2DD4BF; --bad:#F87171; }
-  * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 -apple-system, system-ui, sans-serif; padding:16px; padding-bottom:48px; max-width:560px; margin-inline:auto; }
-  h1 { font-size:20px; font-weight:600; margin:4px 0 2px; }
-  p.sub { color:var(--mute); margin:0 0 16px; font-size:13px; }
-  .card { background:var(--card); border-radius:14px; padding:14px; margin-bottom:12px; }
-  .card h2 { font-size:13px; font-weight:500; color:var(--mute); margin:0 0 8px; text-transform:none; }
-  .row { display:flex; justify-content:space-between; gap:12px; padding:3px 0; font-size:14px; }
-  .row span:first-child { color:var(--mute); }
-  .ok { color:var(--ok); } .bad { color:var(--bad); }
-  button, .btn { appearance:none; border:0; border-radius:12px; padding:13px 16px; font-size:15px; font-weight:600; background:var(--accent); color:#0E0F13; width:100%; cursor:pointer; }
-  button.alt { background:#23252C; color:var(--text); }
-  button:disabled { opacity:.45; }
-  input[type=file], input[type=number] { width:100%; background:#0E0F13; color:var(--text); border:1px solid var(--line); border-radius:10px; padding:10px; font-size:14px; }
-  label { display:block; color:var(--mute); font-size:13px; margin:8px 0 4px; }
-  .bar { height:8px; background:#23252C; border-radius:4px; overflow:hidden; margin:8px 0 4px; }
-  .bar > div { height:100%; width:0; background:var(--accent); transition:width .2s; }
-  pre { margin:0; font-size:11px; color:var(--mute); white-space:pre-wrap; word-break:break-word; max-height:180px; overflow:auto; }
-  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-</style>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stemroom">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<title>Stemroom</title>
+<link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-<h1>Stemroom speed test</h1>
-<p class="sub">Checks whether this device can split a song into stems in the browser. Nothing is uploaded.</p>
+<div class="app">
+  <header class="top" id="top">
+    <button class="icon-btn" id="btn-back" aria-label="Back" hidden></button>
+    <div class="brand" id="brand"><span class="logo"></span><span class="name">Stemroom</span></div>
+    <div class="top-title" id="top-title"></div>
+    <div class="top-actions" id="top-actions"></div>
+  </header>
 
-<div id="crash" class="card" style="display:none;border:1px solid var(--bad)">
-  <h2>Previous run did not finish</h2>
-  <div style="font-size:14px">The last test stopped without a result. Safari probably closed the tab because it ran out of memory. Try a shorter clip.</div>
+  <main>
+    <section id="v-lib" class="view">
+      <div class="lib-head">
+        <div>
+          <h1>Your songs</h1>
+          <p class="sub">Split a song, mute your part, play along.</p>
+        </div>
+        <button class="btn primary" id="btn-add"></button>
+      </div>
+      <div id="song-list" class="song-list"></div>
+      <p class="foot" id="storage-line"></p>
+      <p class="foot">Use songs you own. Nothing you add leaves this device.</p>
+      <p class="foot" id="install-tip" hidden>Tip: tap Share, then Add to Home Screen, to open Stemroom like an app.</p>
+    </section>
+
+    <section id="v-add" class="view" hidden>
+      <h1>Add a song</h1>
+      <div class="card">
+        <label class="drop" for="file" id="drop">
+          <span class="drop-icon" id="drop-icon"></span>
+          <span class="drop-text" id="drop-text">Choose an audio file</span>
+          <span class="drop-sub">mp3, m4a, wav or flac, from Files or iCloud Drive</span>
+        </label>
+        <input id="file" type="file" hidden>
+      </div>
+
+      <div class="card" id="add-details" hidden>
+        <label class="field"><span>Title</span><input id="in-title" type="text" autocomplete="off"></label>
+        <div class="row2">
+          <label class="field"><span>Start (seconds)</span><input id="in-start" type="number" min="0" step="1" inputmode="numeric"></label>
+          <label class="field"><span>End (seconds)</span><input id="in-end" type="number" min="1" step="1" inputmode="numeric"></label>
+        </div>
+        <p class="hint" id="add-estimate"></p>
+        <button class="btn primary wide" id="btn-sep">Separate stems</button>
+      </div>
+
+      <div class="card" id="add-progress" hidden>
+        <div class="prog-title" id="prog-title">Getting ready</div>
+        <div class="bar"><div id="prog-fill"></div></div>
+        <div class="prog-meta"><span id="prog-pct"></span><span id="prog-eta"></span></div>
+        <p class="hint">Keep Stemroom open and the screen on until this finishes. Everything runs on this device.</p>
+        <button class="btn wide" id="btn-cancel">Cancel</button>
+      </div>
+      <p class="foot">This model separates drums, bass and vocals. Everything else, including guitar and keys, stays together in one stem.</p>
+    </section>
+
+    <section id="v-play" class="view" hidden>
+      <div class="presets" id="presets"></div>
+      <div class="stack" id="stack"></div>
+
+      <div class="transport card">
+        <div class="timeline">
+          <span id="t-now">0:00</span>
+          <span class="loop-info" id="loop-info"></span>
+          <span id="t-dur">0:00</span>
+        </div>
+        <div class="main-btns">
+          <button class="icon-btn lg" id="btn-b10" aria-label="Back 10 seconds"></button>
+          <button class="play-btn" id="btn-play" aria-label="Play"></button>
+          <button class="icon-btn lg" id="btn-f10" aria-label="Forward 10 seconds"></button>
+        </div>
+        <div class="loop-btns">
+          <button class="chip" id="btn-a">Set A</button>
+          <button class="chip" id="btn-b">Set B</button>
+          <button class="chip" id="btn-loop">Loop</button>
+          <button class="chip" id="btn-clear">Clear</button>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="card">
+          <div class="ctl-head"><span>Speed</span><b id="speed-val">100%</b></div>
+          <input id="speed" type="range" min="50" max="100" step="5" value="100">
+          <p class="hint">Slower speed keeps the pitch.</p>
+        </div>
+        <div class="card">
+          <div class="ctl-head"><span>Count-in</span></div>
+          <div class="row3">
+            <select id="countin"><option value="0">Off</option><option value="1">1 bar</option><option value="2">2 bars</option></select>
+            <input id="bpm" type="number" min="40" max="240" value="120" inputmode="numeric" aria-label="Beats per minute">
+            <button class="chip" id="btn-tap">Tap BPM</button>
+          </div>
+          <p class="hint">Tap along with the song to set its tempo.</p>
+        </div>
+      </div>
+      <p class="foot">Guitar and keys is everything that isn't drums, bass or vocals.</p>
+    </section>
+  </main>
 </div>
-
-<div class="card">
-  <h2>This device</h2>
-  <div id="env"></div>
-</div>
-
-<div class="card">
-  <h2>Test settings</h2>
-  <label for="file">Song file you own (mp3, m4a, wav)</label>
-  <input id="file" type="file">
-  <label for="secs">Seconds to process from the start</label>
-  <input id="secs" type="number" min="10" max="600" value="30">
-  <label for="eng">Engine</label>
-  <select id="eng" style="width:100%;background:#0E0F13;color:#F2F2F4;border:1px solid #2E3140;border-radius:10px;padding:10px;font-size:14px">
-    <option value="webgpu">WebGPU (fast)</option>
-    <option value="wasm">CPU only (slow, uses less GPU memory)</option>
-  </select>
-  <div style="height:12px"></div>
-  <button id="run" disabled>Run test</button>
-</div>
-
-<div class="card">
-  <h2>Progress</h2>
-  <div id="stage" style="font-size:14px">Waiting for a file.</div>
-  <div class="bar"><div id="fill"></div></div>
-  <div id="pct" style="font-size:12px;color:var(--mute)"></div>
-</div>
-
-<div class="card" id="resCard" style="display:none">
-  <h2>Result</h2>
-  <div id="res"></div>
-  <div style="height:10px"></div>
-  <div class="grid2">
-    <button class="alt" id="pDrumless">Play without drums</button>
-    <button class="alt" id="pDrums">Play drums only</button>
-    <button class="alt" id="pOrig">Play original</button>
-    <button class="alt" id="pStop">Stop</button>
-  </div>
-</div>
-
-<div class="card">
-  <h2>Log</h2>
-  <pre id="log"></pre>
-</div>
-
-<script type="module">
-const ORT_VER = '1.22.0';
-const $ = (id) => document.getElementById(id);
-const logEl = $('log');
-const recent = [];
-const log = (m) => {
-  logEl.textContent += m + '\n'; logEl.scrollTop = logEl.scrollHeight;
-  recent.push(m); if (recent.length > 6) recent.shift();
-  try { localStorage.setItem('stemroom_last', recent.join('\n')); } catch {}
-};
-const fmt = (s) => s < 60 ? s.toFixed(1) + ' s' : Math.floor(s/60) + ' min ' + Math.round(s%60) + ' s';
-const row = (k, v, cls='') => `<div class="row"><span>${k}</span><span class="${cls}">${v}</span></div>`;
-
-if (localStorage.getItem('stemroom_run') === 'started') {
-  $('crash').style.display = 'block';
-  const last = localStorage.getItem('stemroom_last');
-  if (last) { const d = document.createElement('pre'); d.style.marginTop = '8px'; d.textContent = 'Last steps before it stopped:\n' + last; $('crash').appendChild(d); }
-  localStorage.removeItem('stemroom_run');
-}
-
-let hasWebGPU = false, gpuName = 'none';
-try {
-  if ('gpu' in navigator) {
-    const ad = await navigator.gpu.requestAdapter();
-    if (ad) {
-      hasWebGPU = true;
-      const info = ad.info || {};
-      gpuName = [info.vendor, info.architecture].filter(Boolean).join(' ') || 'available';
-    }
-  }
-} catch (e) { log('WebGPU check failed: ' + e.message); }
-
-$('env').innerHTML =
-  row('WebGPU', hasWebGPU ? 'Yes (' + gpuName + ')' : 'No, will be slow', hasWebGPU ? 'ok' : 'bad') +
-  row('CPU threads', navigator.hardwareConcurrency || 'unknown') +
-  row('Memory hint', navigator.deviceMemory ? navigator.deviceMemory + ' GB' : 'not reported by Safari') +
-  row('Cross-origin isolated', self.crossOriginIsolated ? 'Yes' : 'No');
-
-let ort, DemucsProcessor, CONSTANTS;
-async function loadLibs() {
-  if (ort) return;
-  $('stage').textContent = 'Loading libraries…';
-  ort = await import(`https://esm.sh/onnxruntime-web@${ORT_VER}/webgpu`);
-  ({ DemucsProcessor, CONSTANTS } = await import('https://esm.sh/demucs-web'));
-  ort.env.wasm.wasmPaths = `https://cdn.jsdelivr.net/npm/onnxruntime-web@${ORT_VER}/dist/`;
-  ort.env.wasm.numThreads = self.crossOriginIsolated ? (navigator.hardwareConcurrency || 4) : 1;
-}
-
-const MODEL_URLS = [
-  'https://huggingface.co/timcsy/demucs-web-onnx/resolve/main/htdemucs_embedded.onnx',
-  'https://huggingface.co/ptasior/pizu-audio-models/resolve/main/htdemucs_embedded.onnx',
-];
-async function fetchLocalModel() {
-  const mr = await fetch('model/manifest.json', { cache: 'no-cache' });
-  if (!mr.ok) throw new Error('manifest HTTP ' + mr.status);
-  const man = await mr.json();
-  if (!man.parts || !man.parts.length) throw new Error('empty manifest');
-  const out = new Uint8Array(man.size);
-  let o = 0;
-  const cache = ('caches' in self) ? await caches.open('stemroom-model-v1') : null;
-  for (let i = 0; i < man.parts.length; i++) {
-    const url = 'model/' + man.parts[i].file;
-    let r = cache ? await cache.match(url) : null;
-    if (!r) {
-      r = await fetch(url);
-      if (!r.ok) throw new Error(url + ' HTTP ' + r.status);
-      if (cache) { try { await cache.put(url, r.clone()); } catch (e) { log('Cache skipped: ' + e.message); } }
-    }
-    const part = new Uint8Array(await r.arrayBuffer());
-    out.set(part, o); o += part.length;
-    setProgress((i + 1) / man.parts.length, `Model part ${i + 1} of ${man.parts.length}`);
-  }
-  if (o !== man.size) throw new Error('size mismatch');
-  return out.buffer;
-}
-async function fetchRemoteModel() {
-  let lastErr;
-  for (const url of MODEL_URLS) {
-    try {
-      log('Fetching model: ' + url);
-      const r = await fetch(url, { mode: 'cors' });
-      log('Response ' + r.status + ' ' + (r.url || ''));
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      const total = +r.headers.get('content-length') || 180534758;
-      const reader = r.body.getReader();
-      let buf = new Uint8Array(total + 1048576); let got = 0;
-      for (;;) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (got + value.length > buf.length) { const nb = new Uint8Array(got + value.length + 8388608); nb.set(buf.subarray(0, got)); buf = nb; }
-        buf.set(value, got); got += value.length;
-        setProgress(Math.min(got / total, 1), `Model download ${(got/1048576).toFixed(0)} / ${(total/1048576).toFixed(0)} MB`);
-      }
-      return buf.slice(0, got).buffer;
-    } catch (e) {
-      lastErr = e;
-      log('Model fetch failed: ' + (e && e.message ? e.message : e));
-    }
-  }
-  throw new Error('Could not download the model (' + (lastErr && lastErr.message) + ')');
-}
-async function fetchModel() {
-  try {
-    log('Loading model from this site');
-    return await fetchLocalModel();
-  } catch (e) {
-    log('Local model not available (' + (e && e.message ? e.message : e) + '), trying Hugging Face');
-    return await fetchRemoteModel();
-  }
-}
-
-let stems = null, origBuf = null, actx = null, srcNode = null;
-
-$('file').addEventListener('change', () => { $('run').disabled = !$('file').files.length; $('stage').textContent = $('file').files.length ? 'Ready.' : 'Waiting for a file.'; });
-
-function setProgress(p, text) {
-  $('fill').style.width = Math.round(p * 100) + '%';
-  $('pct').textContent = text || '';
-}
-
-$('run').addEventListener('click', async () => {
-  const f = $('file').files[0];
-  if (!f) return;
-  $('run').disabled = true;
-  $('resCard').style.display = 'none';
-  localStorage.setItem('stemroom_run', 'started');
-  const t = {};
-  try {
-    await loadLibs();
-    const SR = 44100;
-    actx = actx || new (window.AudioContext || window.webkitAudioContext)({ sampleRate: SR });
-
-    $('stage').textContent = 'Decoding audio…';
-    const t0 = performance.now();
-    const full = await actx.decodeAudioData(await f.arrayBuffer());
-    const secs = Math.min(+$('secs').value || 30, full.duration);
-    const n = Math.floor(secs * SR);
-    const left = full.getChannelData(0).slice(0, n);
-    const right = (full.numberOfChannels > 1 ? full.getChannelData(1) : full.getChannelData(0)).slice(0, n);
-    origBuf = actx.createBuffer(2, n, SR);
-    origBuf.copyToChannel(left, 0); origBuf.copyToChannel(right, 1);
-    t.decode = (performance.now() - t0) / 1000;
-    log(`Decoded ${full.duration.toFixed(1)} s at ${full.sampleRate} Hz, using first ${secs.toFixed(1)} s`);
-
-    $('stage').textContent = 'Downloading and loading the model (about 170 MB, cached after the first time)…';
-    let tSep = performance.now();
-    const t1 = performance.now();
-    const processor = new DemucsProcessor({
-      ort,
-      sessionOptions: {
-        executionProviders: (hasWebGPU && $('eng').value === 'webgpu') ? ['webgpu', 'wasm'] : ['wasm'],
-        enableCpuMemArena: false,
-        enableMemPattern: false,
-      },
-      onDownloadProgress: (l, tot) => setProgress(tot ? l / tot : 0, `Model download ${(l/1048576).toFixed(0)} / ${(tot/1048576).toFixed(0)} MB`),
-      onLog: (phase, msg) => log(`[${phase}] ${msg}`),
-      onProgress: ({ progress, currentSegment, totalSegments }) => {
-        const el = (performance.now() - tSep) / 1000;
-        const eta = progress > 0.02 ? el / progress - el : 0;
-        setProgress(progress, `Segment ${currentSegment} of ${totalSegments}` + (eta ? ` · about ${fmt(eta)} left` : ''));
-      },
-    });
-    let modelBuf = await fetchModel();
-    log('Model downloaded (' + (modelBuf.byteLength/1048576).toFixed(0) + ' MB), starting session…');
-    await processor.loadModel(modelBuf);
-    modelBuf = null;
-    log('Model session ready');
-    t.load = (performance.now() - t1) / 1000;
-
-    $('stage').textContent = 'Separating stems…';
-    setProgress(0, '');
-    const t2 = performance.now();
-    tSep = t2;
-    log('Separating with ' + $('eng').value + '…');
-    const result = await processor.separate(left, right);
-    t.sep = (performance.now() - t2) / 1000;
-    setProgress(1, 'Done');
-
-    stems = result;
-    localStorage.removeItem('stemroom_run');
-    const rtf = t.sep / secs;
-    const full3 = rtf * 180;
-    $('res').innerHTML =
-      row('Engine', (hasWebGPU && $('eng').value === 'webgpu') ? 'WebGPU' : 'CPU (WASM)') +
-      row('Model download + load', fmt(t.load)) +
-      row(`Separation of ${secs.toFixed(0)} s`, fmt(t.sep), 'ok') +
-      row('Speed', rtf < 1 ? (1/rtf).toFixed(1) + 'x faster than real time' : rtf.toFixed(1) + 'x slower than real time') +
-      row('Estimated 3 min song', fmt(full3)) +
-      row('Tab survived', 'Yes', 'ok');
-    $('resCard').style.display = 'block';
-    $('stage').textContent = 'Finished.';
-    log('RESULT ' + JSON.stringify({ webgpu: hasWebGPU, secs, ...t }));
-  } catch (e) {
-    localStorage.removeItem('stemroom_run');
-    $('stage').innerHTML = '<span class="bad">Failed: ' + (e && e.message ? e.message : e) + '</span>';
-    log('ERROR ' + (e && e.stack ? e.stack : e));
-  } finally {
-    $('run').disabled = !$('file').files.length;
-  }
-});
-
-// Playback helpers
-function stop() { try { srcNode && srcNode.stop(); } catch {} srcNode = null; }
-function playBuffer(buf) {
-  stop();
-  if (actx.state === 'suspended') actx.resume();
-  srcNode = actx.createBufferSource();
-  srcNode.buffer = buf;
-  srcNode.connect(actx.destination);
-  srcNode.start();
-}
-function mix(keys) {
-  const n = stems.drums.left.length;
-  const b = actx.createBuffer(2, n, 44100);
-  const L = b.getChannelData(0), R = b.getChannelData(1);
-  for (const k of keys) {
-    const s = stems[k];
-    for (let i = 0; i < n; i++) { L[i] += s.left[i]; R[i] += s.right[i]; }
-  }
-  return b;
-}
-$('pDrumless').onclick = () => stems && playBuffer(mix(['bass', 'other', 'vocals']));
-$('pDrums').onclick = () => stems && playBuffer(mix(['drums']));
-$('pOrig').onclick = () => origBuf && playBuffer(origBuf);
-$('pStop').onclick = stop;
-</script>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="js/app.js"></script>
 </body>
 </html>

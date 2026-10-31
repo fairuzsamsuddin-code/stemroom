@@ -1,0 +1,64 @@
+name: Build and test
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'js/**'
+      - 'css/**'
+      - 'index.html'
+      - 'tools/**'
+      - '.github/workflows/build.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install tools
+        working-directory: tools
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Player engine tests
+        run: node tools/test-worklet.mjs
+
+      - name: Build vendor files
+        working-directory: tools
+        run: node build.mjs
+
+      - name: App test with stand-in separator
+        working-directory: tools
+        run: node e2e.mjs
+
+      - name: App test with the real model
+        working-directory: tools
+        run: node e2e.mjs --real
+
+      - name: Save test screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output
+          path: tools/out
+          if-no-files-found: ignore
+
+      - name: Commit vendor files
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add vendor
+          if git diff --cached --quiet; then echo "No vendor changes"; exit 0; fi
+          git commit -m "Build vendor files"
+          git pull --rebase origin main
+          git push
