@@ -21,6 +21,7 @@ Free, in-browser stem-separation PWA so drummers (and guitarists) can mute a par
 
 ## Rules and gotchas
 - `wrangler.jsonc` (assets directory `.`, empty `previews` block) is needed because Cloudflare runs `wrangler preview` for non-production branches. `.assetsignore` keeps `tools/`, `.github/`, docs and config out of the site. Check with `npx wrangler deploy --dry-run`.
+- After merging, confirm the production build in Cloudflare (Workers & Pages > Stemroom > Builds) really ran for the new `main` commit. Once a merge produced only a branch preview build, because the working branch had been force-pushed to the merge commit; the live site stayed on the old version. Do not force-push a branch to a commit that is already on `main`; start new work from `origin/main` and push once.
 - Cloudflare has a 25 MiB per-file limit. Keep model parts and built files under it (`tools/build.mjs` checks).
 - npm, pypi and Hugging Face may be unreachable in some sandboxes. `vendor/` is built by GitHub Actions (`build.yml`) and committed by a bot, so run `git fetch && git rebase origin/main` before pushing.
 - Local branch may be `master`: push with `git push origin master:main`.
