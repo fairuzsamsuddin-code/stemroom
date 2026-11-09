@@ -1,0 +1,37 @@
+# Stemroom
+
+Free, in-browser stem-separation PWA so drummers (and guitarists) can mute a part of a song and practise along. No backend: all processing runs on the user's device. Hosted as a static site on Cloudflare (Workers static assets). Repo: fairuzsamsuddin-code/stemroom, branch `main`.
+
+## Owner and devices
+- Owner: Fairuz. Test devices: iPad Pro M1 and iPhone 16 Pro.
+- iPad works (fast WebGPU engine about 80-90 s per 3-min song, CPU engine about 6 min).
+- iPhone: CPU engine fails even on 10 s clips. GPU engine got to piece 19, then a sliced-readback fix was pushed; the result is unconfirmed.
+
+## How it works
+- Model: HTDemucs 4-stem (drums, bass, vocals, other; "guitar and keys" = other). MIT licence, see MODEL-LICENSE.md.
+- Fast engine: onnxruntime-web 1.25.1 WebGPU, 21 fp16 pieces in `model-split/`, needs `shader-f16`. Code in `src/gpu-engine.js`, `src/lean.js`.
+- CPU engine: ORT 1.22.0 wasm, fp32 model in 20 MB parts in `model/`, runs in `src/separate.worker.js`.
+- Auto mode picks the engine in `js/app.js` (`detectGpu`, `chosenEngine`). A GPU failure falls back to CPU and sets `stemroom_force_cpu`.
+- Player: `js/engine.js` plus `js/mixer.worklet.js` (own WSOLA pitch-preserving time-stretch, A-B loop, count-in). Storage in IndexedDB (`js/db.js`).
+- Paste-a-link import supports direct, Dropbox and Google Drive links only. YouTube, Spotify and similar are deliberately refused.
+- `gpu.html` is an experimental WebGPU test page.
+
+## Rules and gotchas
+- Cloudflare has a 25 MiB per-file limit. Keep model parts and built files under it (`tools/build.mjs` checks).
+- npm, pypi and Hugging Face may be unreachable in some sandboxes. `vendor/` is built by GitHub Actions (`build.yml`) and committed by a bot, so run `git fetch && git rebase origin/main` before pushing.
+- Local branch may be `master`: push with `git push origin master:main`.
+- `_headers` sets COOP/COEP for cross-origin isolation (CPU threads). Untested: COEP may block third-party ad scripts, so check this before adding AdSense.
+- Service worker `sw.js`: network-first for the app shell, cache-first for model files (cache `stemroom-model`). Bump it when changing cached assets.
+- Tests: `node tools/e2e.mjs` (mock; `--real` uses the real model), `tools/test-worklet.mjs`, `tools/test-lean.mjs`, `tools/e2e-gpu.mjs`. CI cannot test real WebGPU (no `shader-f16` on SwiftShader), so GPU quality needs a device check.
+
+## Next up
+1. Startup device-compatibility check (message such as "Fast mode available" or "can play but may not separate"), storage display, first-visit download notice.
+2. Public launch pages: landing, how-to guide, FAQ/About/Contact, Privacy, Terms, credits. Keep the app on its own route without ads.
+3. Google AdSense (not Google Ads): needs own domain, content-rich pages, a consent banner for EEA/UK/CH, `ads.txt`. Fairuz applies himself.
+4. Still unreported: integrated fast-engine result on iPad (sound quality, timings) and the iPhone GPU result.
+
+## Minimum user requirements
+- Fast engine: WebGPU with shader-f16 (recent Safari on iPadOS/iOS 26+), about 8 GB RAM.
+- Compatible engine: any recent browser with WebAssembly, workers and AudioWorklet (iPad ok, iPhone not).
+- Playback of saved songs: any recent browser.
+- One-time download of 120-170 MB; about 300 MB for models plus about 130 MB per saved 3-min song.
