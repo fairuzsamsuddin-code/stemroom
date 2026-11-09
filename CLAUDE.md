@@ -20,6 +20,7 @@ Free, in-browser stem-separation PWA so drummers (and guitarists) can mute a par
 - `gpu.html` is an experimental WebGPU test page.
 
 ## Rules and gotchas
+- `wrangler.jsonc` (assets directory `.`, empty `previews` block) is needed because Cloudflare runs `wrangler preview` for non-production branches. `.assetsignore` keeps `tools/`, `.github/`, docs and config out of the site. Check with `npx wrangler deploy --dry-run`.
 - Cloudflare has a 25 MiB per-file limit. Keep model parts and built files under it (`tools/build.mjs` checks).
 - npm, pypi and Hugging Face may be unreachable in some sandboxes. `vendor/` is built by GitHub Actions (`build.yml`) and committed by a bot, so run `git fetch && git rebase origin/main` before pushing.
 - Local branch may be `master`: push with `git push origin master:main`.

@@ -1,0 +1,10 @@
+# Files in the repo that are not part of the website. Cloudflare skips these when it uploads assets.
+.git
+.github
+.gitignore
+.assetsignore
+node_modules
+tools
+wrangler.jsonc
+CLAUDE.md
+README.md

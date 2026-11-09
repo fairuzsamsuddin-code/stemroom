@@ -1,0 +1,11 @@
+{
+  // Stemroom is a static site served by Workers static assets. There is no Worker script.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "stemroom",
+  "compatibility_date": "2025-09-01",
+  "assets": {
+    "directory": "."
+  },
+  // Required by `wrangler preview`, which Cloudflare runs for builds of non-production branches.
+  "previews": {}
+}
