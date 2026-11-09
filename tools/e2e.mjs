@@ -40,9 +40,9 @@ page.on('pageerror', (e) => errors.push(String(e)));
 page.on('console', (m) => { if (m.type() === 'error' && !/ERR_FAILED/.test(m.text())) errors.push(m.text()); if (real) console.log('[page]', m.text()); });
 
 try {
-  const url = base + '?nosw' + (real ? '' : '&worker=' + encodeURIComponent('tools/mock.worker.js'));
+  const url = base + 'app.html?nosw' + (real ? '' : '&worker=' + encodeURIComponent('tools/mock.worker.js'));
   await page.goto(url);
-  check('page is cross-origin isolated', await page.evaluate(() => crossOriginIsolated));
+  check('ads are off until a publisher ID is set', (await page.locator('#consent').isHidden()) && (await page.locator('script[src*="adsbygoogle"]').count()) === 0);
   await page.screenshot({ path: outDir + '1-library.png' });
 
   await page.click('#btn-add');
@@ -104,10 +104,10 @@ try {
   // A-B loop
   await page.click('#btn-play'); // pause
   await page.evaluate(() => { document.getElementById('btn-clear').click(); });
-  await page.click('#stack .stem canvas', { position: { x: 100, y: 20 } });
+  await page.click('#overview', { position: { x: 100, y: 20 } });
   await page.waitForTimeout(300);
   await page.click('#btn-a');
-  await page.click('#stack .stem canvas', { position: { x: 380, y: 20 } });
+  await page.click('#overview', { position: { x: 380, y: 20 } });
   await page.waitForTimeout(300);
   await page.click('#btn-b');
   check('loop is on', await page.locator('#btn-loop').evaluate((e) => e.classList.contains('on')));
@@ -148,6 +148,30 @@ try {
   console.log('ERROR ' + (e.stack || e)); failures++;
   try { await page.screenshot({ path: outDir + 'error.png' }); } catch {}
 }
+
+// ---- ads: with a fake publisher ID the consent banner gates everything, and the player stays ad-free ----
+try {
+  const actx = await browser.newContext({ viewport: { width: 1180, height: 820 } });
+  await actx.route('**/js/ads-config.js', (r) => r.fulfill({ contentType: 'text/javascript', body: "export const ADS = { publisher: 'ca-pub-1234567890123456', slots: { library: '111', add: '222', page: '333' } };" }));
+  let pushes = 0;
+  await actx.route('https://pagead2.googlesyndication.com/**', (r) => r.fulfill({ contentType: 'text/javascript', body: 'window.adsbygoogle = window.adsbygoogle || []; var _p = window.adsbygoogle.push; window.adsbygoogle.push = function () { window.__adPushes = (window.__adPushes || 0) + 1; };' }));
+  const ap = await actx.newPage();
+  const aerr = []; ap.on('pageerror', (e) => aerr.push(String(e)));
+  await ap.goto(base + 'app.html?nosw');
+  check('consent banner shows before any choice', await ap.locator('#consent').isVisible());
+  check('no ad code before consent', (await ap.locator('script[src*="adsbygoogle"]').count()) === 0 && (await ap.locator('#ad-lib').isHidden()));
+  await ap.click('#consent-no');
+  check('"No ads" keeps ad code off', (await ap.locator('script[src*="adsbygoogle"]').count()) === 0 && (await ap.locator('#consent').isHidden()));
+  await ap.click('#ad-choices');
+  await ap.click('#consent-yes');
+  await ap.waitForSelector('#ad-lib:not([hidden]) ins.adsbygoogle');
+  check('library shows an ad unit with the right slot', (await ap.locator('#ad-lib ins').getAttribute('data-ad-slot')) === '111');
+  check('ad script is loaded once consent is given', (await ap.locator('script[src*="adsbygoogle.js?client=ca-pub-1234567890123456"]').count()) === 1);
+  await ap.click('#btn-add');
+  check('add-song screen shows its own ad unit', (await ap.locator('#ad-add ins').getAttribute('data-ad-slot')) === '222' && (await ap.locator('#ad-lib').isHidden()));
+  check('ads page has no errors', aerr.length === 0, aerr.join(' | '));
+  await actx.close();
+} catch (e) { console.log('ERROR ads ' + (e.stack || e)); failures++; }
 check('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 await browser.close(); server.close();
 process.exit(failures ? 1 : 0);

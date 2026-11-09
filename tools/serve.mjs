@@ -1,11 +1,11 @@
-// Tiny static server with the same cross-origin isolation headers as production.
+// Tiny static server. Production sends no cross-origin isolation headers, because Google ads cannot load under them.
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.wasm': 'application/wasm', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.svg': 'image/svg+xml' };
+const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.wasm': 'application/wasm', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.ttf': 'font/ttf', '.txt': 'text/plain', '.svg': 'image/svg+xml' };
 
 export function serve(port = 0) {
   const server = http.createServer((req, res) => {
@@ -15,9 +15,6 @@ export function serve(port = 0) {
     if (!f.startsWith(root) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); res.end('not found'); return; }
     res.writeHead(200, {
       'Content-Type': types[path.extname(f)] || 'application/octet-stream',
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-      'Cross-Origin-Resource-Policy': 'same-origin',
       'Cache-Control': 'no-store',
     });
     fs.createReadStream(f).pipe(res);

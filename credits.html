@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E0F13">
+<title>Credits · Stemroom</title>
+<meta name="description" content="Open-source models, libraries and fonts that Stemroom is built on, with their licences.">
+<link rel="canonical" href="https://stemroom.fsiq.com/credits.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Stemroom">
+<meta property="og:title" content="Credits · Stemroom">
+<meta property="og:description" content="Open-source models, libraries and fonts that Stemroom is built on, with their licences.">
+<meta property="og:url" content="https://stemroom.fsiq.com/credits.html">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<header class="site-head"><div class="wrap">
+  <a class="brand" href="./"><span class="logo"></span>Stemroom</a>
+  <nav aria-label="Main"><a href="guide.html">Guide</a><a href="faq.html">FAQ</a><a href="about.html">About</a><a class="btn primary small" href="app.html">Open the app</a></nav>
+</div></header>
+<main>
+
+<div class="wrap"><article class="prose">
+  <p class="eyebrow">Credits</p>
+  <h1>Credits</h1>
+  <p>Stemroom stands on open-source work. Thank you to everyone below.</p>
+  <h2>Separation model</h2>
+  <ul>
+    <li><b>HTDemucs</b> by Meta Platforms, Inc. (Hybrid Transformer Demucs), MIT License. <a href="https://github.com/facebookresearch/demucs" target="_blank" rel="noopener">github.com/facebookresearch/demucs</a></li>
+    <li><b>ONNX export and processing code</b> from demucs-web by timcsy, MIT License. <a href="https://github.com/timcsy/demucs-web" target="_blank" rel="noopener">github.com/timcsy/demucs-web</a></li>
+  </ul>
+  <p>The model is unmodified apart from being split into smaller parts so it can be served from a static host.</p>
+  <h2>Runtime</h2>
+  <ul><li><b>ONNX Runtime Web</b> by Microsoft, MIT License. <a href="https://github.com/microsoft/onnxruntime" target="_blank" rel="noopener">github.com/microsoft/onnxruntime</a></li></ul>
+  <h2>Fonts</h2>
+  <ul>
+    <li><b>Barlow Condensed</b> by Jeremy Tribby, SIL Open Font License 1.1.</li>
+    <li><b>IBM Plex Mono</b> by IBM, SIL Open Font License 1.1.</li>
+  </ul>
+  <h2>Hosting</h2>
+  <p>Stemroom is hosted as a static site on Cloudflare. Ads, when allowed, are served by Google AdSense.</p>
+</article></div>
+<div id="ad-page" hidden></div>
+</main>
+<footer class="site-foot"><div class="wrap">
+  <div><h4>Stemroom</h4><p>Free stem separation in your browser, for drummers, guitarists and anyone who wants to play along.</p></div>
+  <div><h4>Use it</h4><a href="app.html">Open the app</a><a href="guide.html">How to use it</a><a href="faq.html">FAQ</a></div>
+  <div><h4>About</h4><a href="about.html">About and contact</a><a href="credits.html">Credits</a></div>
+  <div><h4>Legal</h4><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><button class="linkbtn" id="ad-choices" hidden>Ad choices</button></div>
+</div></footer>
+<div class="consent" id="consent" role="dialog" aria-label="Ads and privacy" hidden>
+  <p><b>Ads keep Stemroom free.</b> Your songs never leave your device. Ads come from Google and may use cookies. Allow ads?</p>
+  <div class="consent-btns"><button class="btn primary small" id="consent-yes">Allow ads</button><button class="btn small" id="consent-no">No ads</button><a href="privacy.html">Details</a></div>
+</div>
+<script type="module">
+import { initAds } from './js/ads.js';
+const refresh = initAds(() => 'page');
+</script>
+</body>
+</html>

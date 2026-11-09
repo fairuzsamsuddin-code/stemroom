@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /model/
+Disallow: /model-split/
+Disallow: /vendor/
+
+Sitemap: https://stemroom.fsiq.com/sitemap.xml
