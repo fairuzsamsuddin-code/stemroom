@@ -1,5 +1,6 @@
 import { Engine, SR } from './engine.js';
 import * as DB from './db.js';
+import { assessDevice, detectCaps } from './compat.js';
 
 const STEMS = [
   { key: 'drums', label: 'Drums', color: '#FF5A3C' },
@@ -582,7 +583,18 @@ if (localStorage.getItem('stemroom_gpu_run')) {
   localStorage.removeItem('stemroom_gpu_run'); localStorage.setItem('stemroom_force_cpu', '1');
   setTimeout(() => toast('The fast engine stopped last time, so Stemroom will use the compatible engine. You can pick the fast one again when adding a song.', true), 600);
 }
-detectGpu().then((ok) => { gpuOK = ok; updateEstimate(); });
+detectCaps().then((caps) => {
+  gpuOK = caps.gpu; updateEstimate();
+  const r = assessDevice(caps);
+  $('compat-title').textContent = r.title; $('compat-text').textContent = r.text;
+  $('compat').dataset.level = r.level; $('compat').hidden = false;
+});
+(async () => {
+  let seen = false;
+  try { seen = !!localStorage.getItem('stemroom_first_seen') || await caches.has('stemroom-model'); } catch {}
+  $('first-note').hidden = seen;
+})();
+$('btn-first-ok').addEventListener('click', () => { try { localStorage.setItem('stemroom_first_seen', '1'); } catch {} $('first-note').hidden = true; });
 $('btn-add').innerHTML = ICONS.plus + 'Add song';
 $('btn-back').innerHTML = ICONS.back;
 $('btn-b10').innerHTML = ICONS.rew; $('btn-f10').innerHTML = ICONS.fwd;

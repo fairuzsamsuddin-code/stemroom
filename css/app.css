@@ -124,3 +124,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 #url-bar { margin-top: 10px; }
 #url-bar > div { background: var(--accent); }
 #url-msg.err { color: var(--bad); }
+
+.compat[data-level="fast"] b { color: #2DD4BF; }
+.compat[data-level="ok"] b { color: #FBBF24; }
+.compat[data-level="play"] b, .compat[data-level="none"] b { color: var(--bad); }

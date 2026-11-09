@@ -1,7 +1,7 @@
 // Stemroom service worker: keeps the app and the model available offline.
-const APP = 'stemroom-app-v1';
+const APP = 'stemroom-app-v2';
 const MODEL = 'stemroom-model'; // never deleted, so the 170 MB model is only downloaded once
-const SHELL = ['./', 'index.html', 'css/app.css', 'js/app.js', 'js/engine.js', 'js/db.js', 'js/mixer.worklet.js', 'manifest.webmanifest',
+const SHELL = ['./', 'index.html', 'css/app.css', 'js/app.js', 'js/engine.js', 'js/db.js', 'js/compat.js', 'js/mixer.worklet.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-180.png', 'vendor/separate.worker.js', 'vendor/ort/ort.wasm.min.mjs',
   'vendor/ort/ort-wasm-simd-threaded.mjs', 'vendor/ort/ort-wasm-simd-threaded.wasm'];
 
