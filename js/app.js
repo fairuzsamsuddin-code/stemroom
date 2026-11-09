@@ -1,6 +1,7 @@
 import { Engine, SR } from './engine.js';
 import * as DB from './db.js';
 import { assessDevice, detectCaps } from './compat.js';
+import { initAds, refreshAds } from './ads.js';
 
 const STEMS = [
   { key: 'drums', label: 'Drums', color: '#FF5A3C' },
@@ -33,7 +34,7 @@ const state = {
   view: 'lib', song: null, peaks: [], dur: 0,
   mute: [false, false, false, false], solo: [false, false, false, false], vol: [1, 1, 1, 1],
   loopA: null, loopB: null, loopOn: false, speed: 1, taps: [],
-  decoded: null, file: null, worker: null, sepToken: 0,
+  lev: [], decoded: null, file: null, worker: null, sepToken: 0,
 };
 
 /* ---------- small helpers ---------- */
@@ -56,6 +57,7 @@ function show(view) {
   $('top').classList.toggle('sub', sub);
   $('btn-back').hidden = !sub;
   window.scrollTo(0, 0);
+  refreshAds(view, !$('add-progress').hidden);
 }
 
 /* ---------- library ---------- */
@@ -104,6 +106,7 @@ function applyGains() {
   document.querySelectorAll('.stem').forEach((el, i) => el.classList.toggle('off', g[i] === 0));
   document.querySelectorAll('.ms.m').forEach((b, i) => b.classList.toggle('on', state.mute[i]));
   document.querySelectorAll('.ms.s').forEach((b, i) => b.classList.toggle('on', state.solo[i]));
+  document.querySelectorAll('.stem .db').forEach((el, i) => { el.textContent = state.vol[i] < 0.01 ? '-inf dB' : (20 * Math.log10(state.vol[i])).toFixed(1) + ' dB'; });
   renderPresets();
 }
 
@@ -133,28 +136,34 @@ $('presets').addEventListener('click', (e) => {
 
 function buildStack() {
   $('stack').innerHTML = STEMS.map((s, i) => `
-    <div class="stem" data-i="${i}">
-      <div class="sh"><span class="dot" style="background:${s.color}"></span><span class="nm">${s.label}</span>
-        <input class="vol" type="range" min="0" max="1" step="0.05" value="${state.vol[i]}" aria-label="${s.label} volume">
-        <button class="ms m" aria-label="Mute ${s.label}">M</button><button class="ms s" aria-label="Solo ${s.label}">S</button></div>
-      <canvas></canvas>
-    </div>`).join('') + '<div class="loopbox" id="loopbox"></div><div class="playhead" id="playhead"></div>';
+    <div class="stem" data-i="${i}" style="--c:${s.color}">
+      <div class="scribble">${i === 3 ? 'Gtr+Keys' : s.label}</div>
+      <div class="mf"><div class="meter">${'<i></i>'.repeat(16)}</div>
+        <div class="fwrap"><input class="vol" type="range" min="0" max="1" step="0.01" value="${state.vol[i]}" aria-label="${s.label} volume"></div></div>
+      <div class="db"></div>
+      <div class="msrow"><button class="ms s" aria-label="Solo ${s.label}">S</button><button class="ms m" aria-label="Mute ${s.label}">M</button></div>
+      <div class="chname">${i === 3 ? 'Gtr / Keys' : s.label}</div>
+    </div>`).join('');
+  $('meter-l').innerHTML = $('meter-r').innerHTML = '<i></i>'.repeat(16);
   drawAll();
 }
+// overview: all four stems drawn in their own colours, mirrored around the centre line
 function drawAll() {
-  document.querySelectorAll('.stem canvas').forEach((cv, i) => {
-    const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
-    if (!w) return;
-    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
-    const c = cv.getContext('2d'); c.scale(dpr, dpr); c.clearRect(0, 0, w, h);
-    c.fillStyle = STEMS[i].color;
-    const pk = state.peaks[i]; if (!pk) return;
-    const bw = w / BINS;
-    for (let b = 0; b < BINS; b++) {
-      const v = Math.max(0.02, pk[b]) * (h / 2 - 3);
-      c.fillRect(b * bw, h / 2 - v, Math.max(1, bw - 0.4), v * 2);
-    }
-  });
+  const cv = $('ov-canvas'); if (!cv) return;
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+  if (!w) return;
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  const c = cv.getContext('2d'); c.scale(dpr, dpr); c.clearRect(0, 0, w, h);
+  if (!state.peaks.length) return;
+  const bw = w / BINS;
+  for (let b = 0; b < BINS; b++) {
+    let mx = 0, top = -1;
+    for (let i = 0; i < 4; i++) { const v = state.peaks[i][b]; if (v > mx) { mx = v; top = i; } }
+    if (top < 0) continue;
+    c.fillStyle = STEMS[top].color;
+    const v = Math.max(0.03, mx) * (h / 2 - 3);
+    c.fillRect(b * bw, h / 2 - v, Math.max(1, bw - 0.4), v * 2);
+  }
 }
 window.addEventListener('resize', () => { if (state.view === 'play') { drawAll(); updateLoopBox(); } });
 
@@ -168,6 +177,17 @@ function peaksOf(l, r) {
     out[b] = p; if (p > mx) mx = p;
   }
   for (let b = 0; b < BINS; b++) out[b] /= mx;
+  return out;
+}
+
+// level at 20 Hz for the meters (RMS of each stem, scaled so the loudest moment of the loudest stem is near the top)
+function levelsOf(l, r) {
+  const step = Math.floor(SR / 20), n = Math.floor(l.length / step), out = new Float32Array(n);
+  for (let k = 0; k < n; k++) {
+    let a = 0; const s0 = k * step;
+    for (let i = 0; i < step; i += 4) { const x = l[s0 + i], y = r[s0 + i]; a += x * x + y * y; }
+    out[k] = Math.sqrt(a / (step / 4 * 2));
+  }
   return out;
 }
 
@@ -193,11 +213,12 @@ function pushLoop() {
 }
 
 function setPlayIcon(playing) { $('btn-play').innerHTML = playing ? ICONS.pause : ICONS.play; $('btn-play').setAttribute('aria-label', playing ? 'Pause' : 'Play'); }
+let meterPos = { t: 0, at: 0, playing: false };
 engine.onpos = (t, playing) => {
   $('t-now').textContent = fmt(t);
   const ph = $('playhead'); if (ph && state.dur) ph.style.left = Math.min(100, (t / state.dur) * 100) + '%';
   setPlayIcon(playing);
-  window.__stemroomPos = t;
+  window.__stemroomPos = t; meterPos = { t, at: performance.now(), playing };
 };
 engine.onended = () => setPlayIcon(false);
 
@@ -214,20 +235,17 @@ const jump = (d) => engine.seek(Math.max(0, Math.min(state.dur, (engine.pos / SR
 $('btn-b10').addEventListener('click', () => jump(-10));
 $('btn-f10').addEventListener('click', () => jump(10));
 
-// seek by touching the waveforms
+// seek by touching the overview
 let scrub = false;
 function seekFromEvent(e) {
-  const r = $('stack').getBoundingClientRect();
+  const r = $('overview').getBoundingClientRect();
   const f = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
   engine.seek(f * state.dur);
 }
-$('stack').addEventListener('pointerdown', (e) => {
-  if (e.target.closest('.sh')) return;
-  scrub = true; $('stack').setPointerCapture(e.pointerId); seekFromEvent(e);
-});
-$('stack').addEventListener('pointermove', (e) => { if (scrub) seekFromEvent(e); });
-$('stack').addEventListener('pointerup', () => (scrub = false));
-$('stack').addEventListener('pointercancel', () => (scrub = false));
+$('overview').addEventListener('pointerdown', (e) => { scrub = true; $('overview').setPointerCapture(e.pointerId); seekFromEvent(e); });
+$('overview').addEventListener('pointermove', (e) => { if (scrub) seekFromEvent(e); });
+$('overview').addEventListener('pointerup', () => (scrub = false));
+$('overview').addEventListener('pointercancel', () => (scrub = false));
 $('stack').addEventListener('click', (e) => {
   const st = e.target.closest('.stem'); if (!st) return;
   const i = +st.dataset.i;
@@ -276,6 +294,9 @@ async function openPlayer(song, floatStems) {
   engine.pause();
   state.song = song; state.dur = floatStems[0].l.length / SR;
   state.peaks = floatStems.map((s) => peaksOf(s.l, s.r));
+  state.lev = floatStems.map((s) => levelsOf(s.l, s.r));
+  const lmax = Math.max(1e-6, ...state.lev.map((a) => a.reduce((m, v) => (v > m ? v : m), 0)));
+  state.lev.forEach((a) => { for (let k = 0; k < a.length; k++) a[k] /= lmax; });
   state.mute = [false, false, false, false]; state.solo = [false, false, false, false]; state.vol = [1, 1, 1, 1];
   state.loopA = state.loopB = null; state.loopOn = false; state.speed = 1; state.taps = [];
   $('speed').value = 100; $('speed-val').textContent = '100%';
@@ -578,6 +599,33 @@ $('btn-sep').addEventListener('click', async () => {
   }
 });
 
+/* ---------- meters ---------- */
+const lerpLv = [0, 0, 0, 0]; let mLast = 0;
+function setMeter(el, v) {
+  const n = Math.round(Math.max(0, Math.min(1, v)) * 16);
+  for (let k = 0; k < el.children.length; k++) el.children[k].classList.toggle('on', k < n);
+}
+function meterFrame(now) {
+  requestAnimationFrame(meterFrame);
+  if (state.view !== 'play' || now - mLast < 33) return;
+  mLast = now;
+  const g = effective();
+  const t = meterPos.playing ? meterPos.t + ((now - meterPos.at) / 1000) * state.speed : meterPos.t;
+  const idx = Math.floor(t * 20);
+  const strips = document.querySelectorAll('.stem .meter');
+  let mx = 0;
+  for (let i = 0; i < 4; i++) {
+    const raw = meterPos.playing && state.lev[i] ? (state.lev[i][idx] || 0) * g[i] : 0;
+    // dB-ish scale: -42 dB at the bottom, 0 dB at the top
+    const tgt = raw > 0.0001 ? Math.max(0, (20 * Math.log10(raw) + 42) / 42) : 0;
+    lerpLv[i] = Math.max(tgt, lerpLv[i] * 0.85 - 0.01);
+    if (strips[i]) setMeter(strips[i], lerpLv[i]);
+    mx = Math.max(mx, lerpLv[i]);
+  }
+  setMeter($('meter-l'), mx); setMeter($('meter-r'), mx);
+}
+requestAnimationFrame(meterFrame);
+
 /* ---------- boot ---------- */
 if (localStorage.getItem('stemroom_gpu_run')) {
   localStorage.removeItem('stemroom_gpu_run'); localStorage.setItem('stemroom_force_cpu', '1');
@@ -601,4 +649,5 @@ $('btn-b10').innerHTML = ICONS.rew; $('btn-f10').innerHTML = ICONS.fwd;
 $('drop-icon').innerHTML = ICONS.upload;
 setPlayIcon(false);
 show('lib'); renderLibrary();
+initAds(() => state.view);
 if ('serviceWorker' in navigator && !new URLSearchParams(location.search).has('nosw')) navigator.serviceWorker.register('sw.js').catch(() => {});

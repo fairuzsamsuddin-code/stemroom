@@ -12,6 +12,8 @@ Free, in-browser stem-separation PWA so drummers (and guitarists) can mute a par
 - Fast engine: onnxruntime-web 1.25.1 WebGPU, 21 fp16 pieces in `model-split/`, needs `shader-f16`. Code in `src/gpu-engine.js`, `src/lean.js`.
 - CPU engine: ORT 1.22.0 wasm, fp32 model in 20 MB parts in `model/`, runs in `src/separate.worker.js`.
 - Auto mode picks the engine in `js/app.js` (`detectGpu`, `chosenEngine`). A GPU failure falls back to CPU and sets `stemroom_force_cpu`.
+- Player UI is a mixer console (design chosen by Fairuz from three mockups): channel strips with real level meters (RMS at 20 Hz from the stems, `levelsOf` in `js/app.js`), rotated range inputs as faders, a stem overview waveform for seeking. Fonts are self-hosted in `fonts/` (Barlow Condensed, IBM Plex Mono, SIL OFL).
+- Ads: `js/ads.js` + `js/ads-config.js`. Off until `publisher` is set in `ads-config.js`. Shown only on library and add-song screens (never the player, never while separating), only after the visitor taps Allow in the consent banner. `ads.txt` and `privacy.html` exist. EEA/UK/CH also needs Google's certified consent message turned on in AdSense (Privacy & messaging). AdSense needs an own domain and may reject a tool-only site, so the content pages in Next up are still needed.
 - Player: `js/engine.js` plus `js/mixer.worklet.js` (own WSOLA pitch-preserving time-stretch, A-B loop, count-in). Storage in IndexedDB (`js/db.js`).
 - Paste-a-link import supports direct, Dropbox and Google Drive links only. YouTube, Spotify and similar are deliberately refused.
 - `gpu.html` is an experimental WebGPU test page.
@@ -20,14 +22,14 @@ Free, in-browser stem-separation PWA so drummers (and guitarists) can mute a par
 - Cloudflare has a 25 MiB per-file limit. Keep model parts and built files under it (`tools/build.mjs` checks).
 - npm, pypi and Hugging Face may be unreachable in some sandboxes. `vendor/` is built by GitHub Actions (`build.yml`) and committed by a bot, so run `git fetch && git rebase origin/main` before pushing.
 - Local branch may be `master`: push with `git push origin master:main`.
-- `_headers` sets COOP/COEP for cross-origin isolation (CPU threads). Untested: COEP may block third-party ad scripts, so check this before adding AdSense.
+- `_headers` no longer sends COOP/COEP. Google ad iframes cannot load on a cross-origin-isolated page, so isolation was dropped. The CPU engine therefore runs single-threaded (about 1.5x slower, 2.2 s per audio second instead of 1.5); the GPU engine is unaffected. To go back, restore COOP `same-origin` + COEP `require-corp` in `_headers` and `tools/serve.mjs`, and remove ads.
 - Service worker `sw.js`: network-first for the app shell, cache-first for model files (cache `stemroom-model`). Bump it when changing cached assets.
 - Tests: `node tools/e2e.mjs` (mock; `--real` uses the real model), `tools/test-worklet.mjs`, `tools/test-lean.mjs`, `tools/e2e-gpu.mjs`. CI cannot test real WebGPU (no `shader-f16` on SwiftShader), so GPU quality needs a device check.
 
 ## Next up
 1. Startup device-compatibility check (message such as "Fast mode available" or "can play but may not separate"), storage display, first-visit download notice.
 2. Public launch pages: landing, how-to guide, FAQ/About/Contact, Privacy, Terms, credits. Keep the app on its own route without ads.
-3. Google AdSense (not Google Ads): needs own domain, content-rich pages, a consent banner for EEA/UK/CH, `ads.txt`. Fairuz applies himself.
+3. Google AdSense (not Google Ads): code is in place (see Ads above). Fairuz applies himself on an own domain, then fills `js/ads-config.js` and `ads.txt`.
 4. Still unreported: integrated fast-engine result on iPad (sound quality, timings) and the iPhone GPU result.
 
 ## Minimum user requirements

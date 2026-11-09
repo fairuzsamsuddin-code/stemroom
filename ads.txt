@@ -1,0 +1,5 @@
+# Google AdSense authorised sellers file.
+# After AdSense approves this site, replace this comment with the line AdSense shows you, in this form:
+# google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+# Use the same publisher ID as in js/ads-config.js (without the "ca-" prefix here).
+# This file must be served at the root of your own domain, for example https://yourdomain.com/ads.txt

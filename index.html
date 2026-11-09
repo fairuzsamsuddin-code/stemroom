@@ -37,8 +37,10 @@
         <p class="hint">The first time you separate a song, Stemroom downloads its model (about 120 to 170 MB). It is saved on this device, so this happens once. Use Wi-Fi if you can.</p>
         <button class="btn" id="btn-first-ok">Got it</button></div>
       <div id="song-list" class="song-list"></div>
+      <div class="adslot" id="ad-lib" hidden><span class="adlabel">Advertisement</span><div class="adbox" data-slot="library"></div></div>
       <p class="foot" id="storage-line"></p>
       <p class="foot">Use songs you own. Nothing you add leaves this device.</p>
+      <p class="foot"><a href="privacy.html">Privacy</a> <span id="ad-choices-wrap" hidden>· <button class="linkbtn" id="ad-choices">Ad choices</button></span></p>
       <p class="foot" id="install-tip" hidden>Tip: tap Share, then Add to Home Screen, to open Stemroom like an app.</p>
     </section>
 
@@ -79,51 +81,61 @@
         <p class="hint">Keep Stemroom open and the screen on until this finishes. Everything runs on this device.</p>
         <button class="btn wide" id="btn-cancel">Cancel</button>
       </div>
+      <div class="adslot" id="ad-add" hidden><span class="adlabel">Advertisement</span><div class="adbox" data-slot="add"></div></div>
       <p class="foot">This model separates drums, bass and vocals. Everything else, including guitar and keys, stays together in one stem.</p>
     </section>
 
     <section id="v-play" class="view" hidden>
       <div class="presets" id="presets"></div>
-      <div class="stack" id="stack"></div>
 
-      <div class="transport card">
-        <div class="timeline">
-          <span id="t-now">0:00</span>
+      <div class="console">
+        <div class="c-top">
+          <div class="lcd"><span id="t-now">0:00</span><em>/ <span id="t-dur">0:00</span></em></div>
           <span class="loop-info" id="loop-info"></span>
-          <span id="t-dur">0:00</span>
         </div>
-        <div class="main-btns">
-          <button class="icon-btn lg" id="btn-b10" aria-label="Back 10 seconds"></button>
-          <button class="play-btn" id="btn-play" aria-label="Play"></button>
-          <button class="icon-btn lg" id="btn-f10" aria-label="Forward 10 seconds"></button>
+        <div class="overview" id="overview" aria-label="Song overview. Touch to jump.">
+          <canvas id="ov-canvas"></canvas><div class="loopbox" id="loopbox"></div><div class="playhead" id="playhead"></div>
         </div>
-        <div class="loop-btns">
-          <button class="chip" id="btn-a">Set A</button>
-          <button class="chip" id="btn-b">Set B</button>
-          <button class="chip" id="btn-loop">Loop</button>
-          <button class="chip" id="btn-clear">Clear</button>
-        </div>
-      </div>
 
-      <div class="controls">
-        <div class="card">
-          <div class="ctl-head"><span>Speed</span><b id="speed-val">100%</b></div>
-          <input id="speed" type="range" min="50" max="100" step="5" value="100">
-          <p class="hint">Slower speed keeps the pitch.</p>
-        </div>
-        <div class="card">
-          <div class="ctl-head"><span>Count-in</span></div>
-          <div class="row3">
-            <select id="countin"><option value="0">Off</option><option value="1">1 bar</option><option value="2">2 bars</option></select>
-            <input id="bpm" type="number" min="40" max="240" value="120" inputmode="numeric" aria-label="Beats per minute">
-            <button class="chip" id="btn-tap">Tap BPM</button>
+        <div class="desk">
+          <div id="stack" class="stack"></div>
+          <div class="strip master">
+            <div class="scribble" style="--c:#e8e3d6">Speed</div>
+            <div class="mf">
+              <div class="meter pair"><div class="meter" id="meter-l"></div><div class="meter" id="meter-r"></div></div>
+              <div class="fwrap" style="--c:#e8e3d6"><input id="speed" class="vol" type="range" min="50" max="100" step="5" value="100" aria-label="Speed"></div>
+            </div>
+            <div class="db" id="speed-val">100%</div>
+            <div class="chname">Pitch kept</div>
           </div>
-          <p class="hint">Tap along with the song to set its tempo.</p>
+        </div>
+
+        <div class="transport">
+          <div class="grp">
+            <button class="tb" id="btn-b10" aria-label="Back 10 seconds"></button>
+            <button class="tb play" id="btn-play" aria-label="Play"></button>
+            <button class="tb" id="btn-f10" aria-label="Forward 10 seconds"></button>
+          </div>
+          <div class="grp">
+            <button class="tb txt" id="btn-a">SET A</button>
+            <button class="tb txt" id="btn-b">SET B</button>
+            <button class="tb txt" id="btn-loop">LOOP</button>
+            <button class="tb txt" id="btn-clear">CLEAR</button>
+          </div>
+          <div class="grp count">
+            <label class="cnt"><span>COUNT-IN</span><select id="countin"><option value="0">Off</option><option value="1">1 bar</option><option value="2">2 bars</option></select></label>
+            <label class="cnt"><span>BPM</span><input id="bpm" type="number" min="40" max="240" value="120" inputmode="numeric" aria-label="Beats per minute"></label>
+            <button class="tb txt" id="btn-tap">TAP</button>
+          </div>
         </div>
       </div>
-      <p class="foot">Guitar and keys is everything that isn't drums, bass or vocals.</p>
+      <p class="foot">Guitar and keys is everything that isn't drums, bass or vocals. Slower speed keeps the pitch. Tap along with the song to set its tempo.</p>
     </section>
   </main>
+</div>
+<div class="consent" id="consent" role="dialog" aria-label="Ads and privacy" hidden>
+  <p><b>Ads keep Stemroom free.</b> Your songs never leave this device. Ads come from Google and may use cookies. Allow ads?</p>
+  <div class="consent-btns"><button class="btn primary" id="consent-yes">Allow ads</button><button class="btn" id="consent-no">No ads</button><a href="privacy.html">Details</a></div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script type="module" src="js/app.js"></script>
