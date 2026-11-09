@@ -1,5 +1,5 @@
 // Google AdSense, loaded only after the visitor agrees. Ads appear on the library and add-song screens,
-// never in the player, so they cannot get in the way of the controls or compete with playback.
+// and on the guide and FAQ pages, never in the player, so they cannot get in the way of the controls or compete with playback.
 import { ADS } from './ads-config.js';
 
 const KEY = 'stemroom_ads_consent'; // 'yes' | 'no'
@@ -33,7 +33,7 @@ function fill(box) {
 
 // view: 'lib' | 'add' | 'play'. `busy` hides the add-song slot while a song is being separated.
 export function refreshAds(view, busy) {
-  const want = { 'ad-lib': view === 'lib', 'ad-add': view === 'add' && !busy };
+  const want = { 'ad-lib': view === 'lib', 'ad-add': view === 'add' && !busy, 'ad-page': view === 'page' };
   const on = adsEnabled() && choice() === 'yes';
   for (const [id, show] of Object.entries(want)) {
     const el = $(id); if (!el) continue;
@@ -45,18 +45,19 @@ export function refreshAds(view, busy) {
 
 export function initAds(getView) {
   if (!adsEnabled()) return;
-  const refresh = () => refreshAds(getView(), !$('add-progress').hidden);
+  const refresh = () => refreshAds(getView(), !!$('add-progress') && !$('add-progress').hidden);
   const banner = $('consent');
   const sync = () => {
     banner.hidden = choice() !== null;
-    $('ad-choices-wrap').hidden = false;
+    if ($('ad-choices-wrap')) $('ad-choices-wrap').hidden = false;
+    if ($('ad-choices')) $('ad-choices').hidden = false;
     if (choice() === 'yes') loadScript();
     refresh();
   };
   $('consent-yes').addEventListener('click', () => { setChoice('yes'); sync(); });
   $('consent-no').addEventListener('click', () => { setChoice('no'); sync(); });
   $('ad-choices').addEventListener('click', () => { try { localStorage.removeItem(KEY); } catch {} sync(); });
-  new MutationObserver(refresh).observe($('add-progress'), { attributes: true, attributeFilter: ['hidden'] });
+  if ($('add-progress')) new MutationObserver(refresh).observe($('add-progress'), { attributes: true, attributeFilter: ['hidden'] });
   sync();
   return refresh;
 }

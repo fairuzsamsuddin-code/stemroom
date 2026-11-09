@@ -40,7 +40,7 @@ page.on('pageerror', (e) => errors.push(String(e)));
 page.on('console', (m) => { if (m.type() === 'error' && !/ERR_FAILED/.test(m.text())) errors.push(m.text()); if (real) console.log('[page]', m.text()); });
 
 try {
-  const url = base + '?nosw' + (real ? '' : '&worker=' + encodeURIComponent('tools/mock.worker.js'));
+  const url = base + 'app.html?nosw' + (real ? '' : '&worker=' + encodeURIComponent('tools/mock.worker.js'));
   await page.goto(url);
   check('ads are off until a publisher ID is set', (await page.locator('#consent').isHidden()) && (await page.locator('script[src*="adsbygoogle"]').count()) === 0);
   await page.screenshot({ path: outDir + '1-library.png' });
@@ -152,12 +152,12 @@ try {
 // ---- ads: with a fake publisher ID the consent banner gates everything, and the player stays ad-free ----
 try {
   const actx = await browser.newContext({ viewport: { width: 1180, height: 820 } });
-  await actx.route('**/js/ads-config.js', (r) => r.fulfill({ contentType: 'text/javascript', body: "export const ADS = { publisher: 'ca-pub-1234567890123456', slots: { library: '111', add: '222' } };" }));
+  await actx.route('**/js/ads-config.js', (r) => r.fulfill({ contentType: 'text/javascript', body: "export const ADS = { publisher: 'ca-pub-1234567890123456', slots: { library: '111', add: '222', page: '333' } };" }));
   let pushes = 0;
   await actx.route('https://pagead2.googlesyndication.com/**', (r) => r.fulfill({ contentType: 'text/javascript', body: 'window.adsbygoogle = window.adsbygoogle || []; var _p = window.adsbygoogle.push; window.adsbygoogle.push = function () { window.__adPushes = (window.__adPushes || 0) + 1; };' }));
   const ap = await actx.newPage();
   const aerr = []; ap.on('pageerror', (e) => aerr.push(String(e)));
-  await ap.goto(base + '?nosw');
+  await ap.goto(base + 'app.html?nosw');
   check('consent banner shows before any choice', await ap.locator('#consent').isVisible());
   check('no ad code before consent', (await ap.locator('script[src*="adsbygoogle"]').count()) === 0 && (await ap.locator('#ad-lib').isHidden()));
   await ap.click('#consent-no');

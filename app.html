@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E0F13">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stemroom">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<title>Stemroom: mute a part of any song and play along</title>
+<meta name="description" content="Free stem separation in your browser. Mute the drums, bass, vocals or guitar and keys, slow the song down, loop a section and practise along. Your songs never leave your device.">
+<link rel="canonical" href="https://stemroom.fsiq.com/app">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Stemroom">
+<meta property="og:url" content="https://stemroom.fsiq.com/app">
+<meta property="og:title" content="Stemroom: mute a part of any song and play along">
+<meta property="og:description" content="Free stem separation in your browser for drummers and guitarists. Nothing is uploaded.">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="app">
+  <header class="top" id="top">
+    <button class="icon-btn" id="btn-back" aria-label="Back" hidden></button>
+    <div class="brand" id="brand"><span class="logo"></span><span class="name">Stemroom</span></div>
+    <div class="top-title" id="top-title"></div>
+    <div class="top-actions" id="top-actions"></div>
+  </header>
+
+  <main>
+    <section id="v-lib" class="view">
+      <div class="lib-head">
+        <div>
+          <h1>Your songs</h1>
+          <p class="sub">Split a song, mute your part, play along.</p>
+        </div>
+        <button class="btn primary" id="btn-add"></button>
+      </div>
+      <div class="card compat" id="compat" hidden><b id="compat-title"></b><p class="hint" id="compat-text"></p></div>
+      <div class="card" id="first-note" hidden><b>First time</b>
+        <p class="hint">The first time you separate a song, Stemroom downloads its model (about 120 to 170 MB). It is saved on this device, so this happens once. Use Wi-Fi if you can.</p>
+        <button class="btn" id="btn-first-ok">Got it</button></div>
+      <div id="song-list" class="song-list"></div>
+      <div class="adslot" id="ad-lib" hidden><span class="adlabel">Advertisement</span><div class="adbox" data-slot="library"></div></div>
+      <p class="foot" id="storage-line"></p>
+      <p class="foot">Use songs you own. Nothing you add leaves this device.</p>
+      <p class="foot"><a href="./">About Stemroom</a> · <a href="guide.html">Guide</a> · <a href="faq.html">FAQ</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> <span id="ad-choices-wrap" hidden>· <button class="linkbtn" id="ad-choices">Ad choices</button></span></p>
+      <p class="foot" id="install-tip" hidden>Tip: tap Share, then Add to Home Screen, to open Stemroom like an app.</p>
+    </section>
+
+    <section id="v-add" class="view" hidden>
+      <h1>Add a song</h1>
+      <div class="card">
+        <label class="drop" for="file" id="drop">
+          <span class="drop-icon" id="drop-icon"></span>
+          <span class="drop-text" id="drop-text">Choose an audio file</span>
+          <span class="drop-sub">mp3, m4a, wav or flac, from Files or iCloud Drive</span>
+        </label>
+        <input id="file" type="file" hidden>
+        <div class="or"><span>or paste a link</span></div>
+        <div class="linkrow">
+          <input id="in-url" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://example.com/song.mp3" aria-label="Link to an audio file">
+          <button class="btn" id="btn-url">Get</button>
+        </div>
+        <div class="bar" id="url-bar" hidden><div id="url-fill"></div></div>
+        <p class="hint" id="url-msg">Works with a direct link to an mp3, m4a, wav or flac file, and with Dropbox share links. Links to YouTube, Spotify or Apple Music can't be used.</p>
+      </div>
+
+      <div class="card" id="add-details" hidden>
+        <label class="field"><span>Title</span><input id="in-title" type="text" autocomplete="off"></label>
+        <div class="row2">
+          <label class="field"><span>Start (seconds)</span><input id="in-start" type="number" min="0" step="1" inputmode="numeric"></label>
+          <label class="field"><span>End (seconds)</span><input id="in-end" type="number" min="1" step="1" inputmode="numeric"></label>
+        </div>
+        <label class="field"><span>Engine</span>
+          <select id="in-engine"><option value="auto">Automatic</option><option value="gpu">Fast (uses the GPU)</option><option value="cpu">Compatible (slower)</option></select></label>
+        <p class="hint" id="add-estimate"></p>
+        <button class="btn primary wide" id="btn-sep">Separate stems</button>
+      </div>
+
+      <div class="card" id="add-progress" hidden>
+        <div class="prog-title" id="prog-title">Getting ready</div>
+        <div class="bar"><div id="prog-fill"></div></div>
+        <div class="prog-meta"><span id="prog-pct"></span><span id="prog-eta"></span></div>
+        <p class="hint">Keep Stemroom open and the screen on until this finishes. Everything runs on this device.</p>
+        <button class="btn wide" id="btn-cancel">Cancel</button>
+      </div>
+      <div class="adslot" id="ad-add" hidden><span class="adlabel">Advertisement</span><div class="adbox" data-slot="add"></div></div>
+      <p class="foot">This model separates drums, bass and vocals. Everything else, including guitar and keys, stays together in one stem.</p>
+    </section>
+
+    <section id="v-play" class="view" hidden>
+      <div class="presets" id="presets"></div>
+
+      <div class="console">
+        <div class="c-top">
+          <div class="lcd"><span id="t-now">0:00</span><em>/ <span id="t-dur">0:00</span></em></div>
+          <span class="loop-info" id="loop-info"></span>
+        </div>
+        <div class="overview" id="overview" aria-label="Song overview. Touch to jump.">
+          <canvas id="ov-canvas"></canvas><div class="loopbox" id="loopbox"></div><div class="playhead" id="playhead"></div>
+        </div>
+
+        <div class="desk">
+          <div id="stack" class="stack"></div>
+          <div class="strip master">
+            <div class="scribble" style="--c:#e8e3d6">Speed</div>
+            <div class="mf">
+              <div class="meter pair"><div class="meter" id="meter-l"></div><div class="meter" id="meter-r"></div></div>
+              <div class="fwrap" style="--c:#e8e3d6"><input id="speed" class="vol" type="range" min="50" max="100" step="5" value="100" aria-label="Speed"></div>
+            </div>
+            <div class="db" id="speed-val">100%</div>
+            <div class="chname">Pitch kept</div>
+          </div>
+        </div>
+
+        <div class="transport">
+          <div class="grp">
+            <button class="tb" id="btn-b10" aria-label="Back 10 seconds"></button>
+            <button class="tb play" id="btn-play" aria-label="Play"></button>
+            <button class="tb" id="btn-f10" aria-label="Forward 10 seconds"></button>
+          </div>
+          <div class="grp">
+            <button class="tb txt" id="btn-a">SET A</button>
+            <button class="tb txt" id="btn-b">SET B</button>
+            <button class="tb txt" id="btn-loop">LOOP</button>
+            <button class="tb txt" id="btn-clear">CLEAR</button>
+          </div>
+          <div class="grp count">
+            <label class="cnt"><span>COUNT-IN</span><select id="countin"><option value="0">Off</option><option value="1">1 bar</option><option value="2">2 bars</option></select></label>
+            <label class="cnt"><span>BPM</span><input id="bpm" type="number" min="40" max="240" value="120" inputmode="numeric" aria-label="Beats per minute"></label>
+            <button class="tb txt" id="btn-tap">TAP</button>
+          </div>
+        </div>
+      </div>
+      <p class="foot">Guitar and keys is everything that isn't drums, bass or vocals. Slower speed keeps the pitch. Tap along with the song to set its tempo.</p>
+    </section>
+  </main>
+</div>
+<div class="consent" id="consent" role="dialog" aria-label="Ads and privacy" hidden>
+  <p><b>Ads keep Stemroom free.</b> Your songs never leave this device. Ads come from Google and may use cookies. Allow ads?</p>
+  <div class="consent-btns"><button class="btn primary" id="consent-yes">Allow ads</button><button class="btn" id="consent-no">No ads</button><a href="privacy.html">Details</a></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

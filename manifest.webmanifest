@@ -2,7 +2,7 @@
   "name": "Stemroom",
   "short_name": "Stemroom",
   "description": "Split songs into stems and mute your part to practise along.",
-  "start_url": "./",
+  "start_url": "app.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0E0F13",

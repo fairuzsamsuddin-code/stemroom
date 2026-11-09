@@ -4,147 +4,110 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0E0F13">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Stemroom">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/icon-180.png">
-<link rel="icon" href="icons/icon-192.png">
 <title>Stemroom: mute a part of any song and play along</title>
 <meta name="description" content="Free stem separation in your browser. Mute the drums, bass, vocals or guitar and keys, slow the song down, loop a section and practise along. Your songs never leave your device.">
 <link rel="canonical" href="https://stemroom.fsiq.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Stemroom">
-<meta property="og:url" content="https://stemroom.fsiq.com/">
 <meta property="og:title" content="Stemroom: mute a part of any song and play along">
-<meta property="og:description" content="Free stem separation in your browser for drummers and guitarists. Nothing is uploaded.">
-<link rel="stylesheet" href="css/app.css">
+<meta property="og:description" content="Free stem separation in your browser. Mute the drums, bass, vocals or guitar and keys, slow the song down, loop a section and practise along. Your songs never leave your device.">
+<meta property="og:url" content="https://stemroom.fsiq.com/">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="css/site.css">
 </head>
 <body>
-<div class="app">
-  <header class="top" id="top">
-    <button class="icon-btn" id="btn-back" aria-label="Back" hidden></button>
-    <div class="brand" id="brand"><span class="logo"></span><span class="name">Stemroom</span></div>
-    <div class="top-title" id="top-title"></div>
-    <div class="top-actions" id="top-actions"></div>
-  </header>
+<header class="site-head"><div class="wrap">
+  <a class="brand" href="./"><span class="logo"></span>Stemroom</a>
+  <nav aria-label="Main"><a href="guide.html">Guide</a><a href="faq.html">FAQ</a><a href="about.html">About</a><a class="btn primary small" href="app.html">Open the app</a></nav>
+</div></header>
+<main>
 
-  <main>
-    <section id="v-lib" class="view">
-      <div class="lib-head">
-        <div>
-          <h1>Your songs</h1>
-          <p class="sub">Split a song, mute your part, play along.</p>
-        </div>
-        <button class="btn primary" id="btn-add"></button>
-      </div>
-      <div class="card compat" id="compat" hidden><b id="compat-title"></b><p class="hint" id="compat-text"></p></div>
-      <div class="card" id="first-note" hidden><b>First time</b>
-        <p class="hint">The first time you separate a song, Stemroom downloads its model (about 120 to 170 MB). It is saved on this device, so this happens once. Use Wi-Fi if you can.</p>
-        <button class="btn" id="btn-first-ok">Got it</button></div>
-      <div id="song-list" class="song-list"></div>
-      <div class="adslot" id="ad-lib" hidden><span class="adlabel">Advertisement</span><div class="adbox" data-slot="library"></div></div>
-      <p class="foot" id="storage-line"></p>
-      <p class="foot">Use songs you own. Nothing you add leaves this device.</p>
-      <p class="foot"><a href="privacy.html">Privacy</a> <span id="ad-choices-wrap" hidden>· <button class="linkbtn" id="ad-choices">Ad choices</button></span></p>
-      <p class="foot" id="install-tip" hidden>Tip: tap Share, then Add to Home Screen, to open Stemroom like an app.</p>
-    </section>
+<section class="hero"><div class="wrap">
+  <div>
+    <p class="eyebrow">Free practice tool for musicians</p>
+    <h1>Mute a part of any song and play along</h1>
+    <p class="lede">Stemroom splits a song into drums, bass, vocals and guitar and keys, right in your browser. Turn off your part, slow the hard bits down and play. Your songs never leave your device.</p>
+    <div class="cta"><a class="btn primary" href="app.html">Open Stemroom</a><a class="btn" href="guide.html">How it works</a></div>
+    <p class="fine">Free. No account. Works offline after your first visit.</p>
+  </div>
+  <div class="shot"><img src="img/player.png" width="1180" height="820" alt="The Stemroom player: a mixer with four channel strips for drums, bass, vocals and guitar and keys, a waveform overview with a looped section, and transport buttons."></div>
+</div></section>
 
-    <section id="v-add" class="view" hidden>
-      <h1>Add a song</h1>
-      <div class="card">
-        <label class="drop" for="file" id="drop">
-          <span class="drop-icon" id="drop-icon"></span>
-          <span class="drop-text" id="drop-text">Choose an audio file</span>
-          <span class="drop-sub">mp3, m4a, wav or flac, from Files or iCloud Drive</span>
-        </label>
-        <input id="file" type="file" hidden>
-        <div class="or"><span>or paste a link</span></div>
-        <div class="linkrow">
-          <input id="in-url" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://example.com/song.mp3" aria-label="Link to an audio file">
-          <button class="btn" id="btn-url">Get</button>
-        </div>
-        <div class="bar" id="url-bar" hidden><div id="url-fill"></div></div>
-        <p class="hint" id="url-msg">Works with a direct link to an mp3, m4a, wav or flac file, and with Dropbox share links. Links to YouTube, Spotify or Apple Music can't be used.</p>
-      </div>
+<section class="block"><div class="wrap">
+  <h2>Four stems, one mixer</h2>
+  <p class="sec-sub">Stemroom uses HTDemucs, an open music source separation model. It pulls a finished recording apart into four parts, each on its own channel.</p>
+  <div class="stems">
+    <div style="--c:var(--drums)"><b>Drums</b><p>Kick, snare, hats and cymbals. Mute it to play the drums yourself, or solo it to hear exactly what the drummer played.</p></div>
+    <div style="--c:var(--bass)"><b>Bass</b><p>Bass guitar and synth bass. Mute it to cover the low end, or solo it to learn the line.</p></div>
+    <div style="--c:var(--vocals)"><b>Vocals</b><p>Lead and backing vocals. Mute them to sing the song yourself, or solo them to check phrasing.</p></div>
+    <div style="--c:var(--other)"><b>Guitar and keys</b><p>Everything that isn't drums, bass or vocals. This model keeps guitars, keys and other instruments together in one stem.</p></div>
+  </div>
+</div></section>
 
-      <div class="card" id="add-details" hidden>
-        <label class="field"><span>Title</span><input id="in-title" type="text" autocomplete="off"></label>
-        <div class="row2">
-          <label class="field"><span>Start (seconds)</span><input id="in-start" type="number" min="0" step="1" inputmode="numeric"></label>
-          <label class="field"><span>End (seconds)</span><input id="in-end" type="number" min="1" step="1" inputmode="numeric"></label>
-        </div>
-        <label class="field"><span>Engine</span>
-          <select id="in-engine"><option value="auto">Automatic</option><option value="gpu">Fast (uses the GPU)</option><option value="cpu">Compatible (slower)</option></select></label>
-        <p class="hint" id="add-estimate"></p>
-        <button class="btn primary wide" id="btn-sep">Separate stems</button>
-      </div>
+<section class="block"><div class="wrap">
+  <h2>Three steps</h2>
+  <p class="sec-sub">From a file on your device to playing along, usually in a few minutes.</p>
+  <ol class="steps">
+    <li><div><b>Add a song</b><span>Pick an audio file (mp3, m4a, wav or flac) or paste a direct, Dropbox or Google Drive link. Choose the part of the song you want, or use the whole thing.</span></div></li>
+    <li><div><b>Let it separate</b><span>Stemroom works on your device, so nothing is uploaded. On an iPad Pro with WebGPU, a three-minute song takes about a minute and a half. Other devices use a slower mode that takes several minutes.</span></div></li>
+    <li><div><b>Mute your part and play</b><span>Tap a preset such as "No drums", or mix the four channels by hand. Loop a tricky bar, slow it down without changing pitch, and use the count-in to start together.</span></div></li>
+  </ol>
+</div></section>
 
-      <div class="card" id="add-progress" hidden>
-        <div class="prog-title" id="prog-title">Getting ready</div>
-        <div class="bar"><div id="prog-fill"></div></div>
-        <div class="prog-meta"><span id="prog-pct"></span><span id="prog-eta"></span></div>
-        <p class="hint">Keep Stemroom open and the screen on until this finishes. Everything runs on this device.</p>
-        <button class="btn wide" id="btn-cancel">Cancel</button>
-      </div>
-      <div class="adslot" id="ad-add" hidden><span class="adlabel">Advertisement</span><div class="adbox" data-slot="add"></div></div>
-      <p class="foot">This model separates drums, bass and vocals. Everything else, including guitar and keys, stays together in one stem.</p>
-    </section>
+<section class="block"><div class="wrap">
+  <h2>Made for practising</h2>
+  <p class="sec-sub">Every control is there because it helps you play a part better.</p>
+  <div class="feat">
+    <div><h3>Loop any section</h3><p>Set A and B, and Stemroom repeats that bar, fill or solo until you have it.</p></div>
+    <div><h3>Slow down, same pitch</h3><p>Play at 50 to 100 percent speed. The pitch stays put, so you keep playing in tune with the song.</p></div>
+    <div><h3>Count-in and tap tempo</h3><p>Get one or two bars of clicks before the song starts. Tap along to set the tempo if you don't know it.</p></div>
+    <div><h3>One-tap presets</h3><p>No drums, no bass, no vocals, no guitar and keys, or drums only. Change your mind in one tap.</p></div>
+    <div><h3>Real level meters</h3><p>See each part's level move as the song plays, so you can hear and see what to listen for.</p></div>
+    <div><h3>Save and export</h3><p>Songs are saved on your device for next time. Export the current mix as a WAV file, for example a backing track without drums.</p></div>
+  </div>
+</div></section>
 
-    <section id="v-play" class="view" hidden>
-      <div class="presets" id="presets"></div>
+<section class="block"><div class="wrap">
+  <h2>Private by design</h2>
+  <p class="sec-sub">There is no Stemroom server that handles your music. The separation model runs on your device, and the songs and stems are stored in your browser. The first visit downloads the model once (about 120 to 170 MB), and after that Stemroom works offline. Read the <a href="privacy.html">privacy page</a> for the details.</p>
+</div></section>
 
-      <div class="console">
-        <div class="c-top">
-          <div class="lcd"><span id="t-now">0:00</span><em>/ <span id="t-dur">0:00</span></em></div>
-          <span class="loop-info" id="loop-info"></span>
-        </div>
-        <div class="overview" id="overview" aria-label="Song overview. Touch to jump.">
-          <canvas id="ov-canvas"></canvas><div class="loopbox" id="loopbox"></div><div class="playhead" id="playhead"></div>
-        </div>
+<section class="block"><div class="wrap">
+  <h2>What it runs on</h2>
+  <p class="sec-sub">Stemroom picks the fastest mode your device supports.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Device</th><th>Separating a song</th><th>Playing saved songs</th></tr></thead>
+    <tbody>
+      <tr><td>iPad or Mac with a recent Safari and WebGPU</td><td class="ok">Fast mode, about 1.5 minutes for a 3-minute song</td><td class="ok">Yes</td></tr>
+      <tr><td>Computer or iPad without WebGPU, any recent browser</td><td class="mid">Compatible mode, several minutes</td><td class="ok">Yes</td></tr>
+      <tr><td>iPhone</td><td class="no">Not reliable yet</td><td class="ok">Yes</td></tr>
+    </tbody>
+  </table></div>
+  <p class="fine">Fast mode needs about 8 GB of memory. Stemroom checks your device when it opens and tells you what to expect.</p>
+</div></section>
 
-        <div class="desk">
-          <div id="stack" class="stack"></div>
-          <div class="strip master">
-            <div class="scribble" style="--c:#e8e3d6">Speed</div>
-            <div class="mf">
-              <div class="meter pair"><div class="meter" id="meter-l"></div><div class="meter" id="meter-r"></div></div>
-              <div class="fwrap" style="--c:#e8e3d6"><input id="speed" class="vol" type="range" min="50" max="100" step="5" value="100" aria-label="Speed"></div>
-            </div>
-            <div class="db" id="speed-val">100%</div>
-            <div class="chname">Pitch kept</div>
-          </div>
-        </div>
-
-        <div class="transport">
-          <div class="grp">
-            <button class="tb" id="btn-b10" aria-label="Back 10 seconds"></button>
-            <button class="tb play" id="btn-play" aria-label="Play"></button>
-            <button class="tb" id="btn-f10" aria-label="Forward 10 seconds"></button>
-          </div>
-          <div class="grp">
-            <button class="tb txt" id="btn-a">SET A</button>
-            <button class="tb txt" id="btn-b">SET B</button>
-            <button class="tb txt" id="btn-loop">LOOP</button>
-            <button class="tb txt" id="btn-clear">CLEAR</button>
-          </div>
-          <div class="grp count">
-            <label class="cnt"><span>COUNT-IN</span><select id="countin"><option value="0">Off</option><option value="1">1 bar</option><option value="2">2 bars</option></select></label>
-            <label class="cnt"><span>BPM</span><input id="bpm" type="number" min="40" max="240" value="120" inputmode="numeric" aria-label="Beats per minute"></label>
-            <button class="tb txt" id="btn-tap">TAP</button>
-          </div>
-        </div>
-      </div>
-      <p class="foot">Guitar and keys is everything that isn't drums, bass or vocals. Slower speed keeps the pitch. Tap along with the song to set its tempo.</p>
-    </section>
-  </main>
-</div>
+<section class="closing"><div class="wrap">
+  <h2>Pick a song and start playing</h2>
+  <div class="cta"><a class="btn primary" href="app.html">Open Stemroom</a><a class="btn" href="faq.html">Read the FAQ</a></div>
+  <p class="fine">Use songs you own or have permission to use.</p>
+</div></section>
+<div id="ad-page" hidden></div>
+</main>
+<footer class="site-foot"><div class="wrap">
+  <div><h4>Stemroom</h4><p>Free stem separation in your browser, for drummers, guitarists and anyone who wants to play along.</p></div>
+  <div><h4>Use it</h4><a href="app.html">Open the app</a><a href="guide.html">How to use it</a><a href="faq.html">FAQ</a></div>
+  <div><h4>About</h4><a href="about.html">About and contact</a><a href="credits.html">Credits</a></div>
+  <div><h4>Legal</h4><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><button class="linkbtn" id="ad-choices" hidden>Ad choices</button></div>
+</div></footer>
 <div class="consent" id="consent" role="dialog" aria-label="Ads and privacy" hidden>
-  <p><b>Ads keep Stemroom free.</b> Your songs never leave this device. Ads come from Google and may use cookies. Allow ads?</p>
-  <div class="consent-btns"><button class="btn primary" id="consent-yes">Allow ads</button><button class="btn" id="consent-no">No ads</button><a href="privacy.html">Details</a></div>
+  <p><b>Ads keep Stemroom free.</b> Your songs never leave your device. Ads come from Google and may use cookies. Allow ads?</p>
+  <div class="consent-btns"><button class="btn primary small" id="consent-yes">Allow ads</button><button class="btn small" id="consent-no">No ads</button><a href="privacy.html">Details</a></div>
 </div>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script type="module" src="js/app.js"></script>
+<script type="module">
+import { initAds } from './js/ads.js';
+const refresh = initAds(() => 'page');
+if (matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) location.replace('app.html');
+</script>
 </body>
 </html>

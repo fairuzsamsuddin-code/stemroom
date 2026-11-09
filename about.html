@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E0F13">
+<title>About Stemroom</title>
+<meta name="description" content="Stemroom is a free, private stem-separation tool for drummers, guitarists and other musicians, built on open models and running in your browser.">
+<link rel="canonical" href="https://stemroom.fsiq.com/about.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Stemroom">
+<meta property="og:title" content="About Stemroom">
+<meta property="og:description" content="Stemroom is a free, private stem-separation tool for drummers, guitarists and other musicians, built on open models and running in your browser.">
+<meta property="og:url" content="https://stemroom.fsiq.com/about.html">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<header class="site-head"><div class="wrap">
+  <a class="brand" href="./"><span class="logo"></span>Stemroom</a>
+  <nav aria-label="Main"><a href="guide.html">Guide</a><a href="faq.html">FAQ</a><a href="about.html" aria-current="page">About</a><a class="btn primary small" href="app.html">Open the app</a></nav>
+</div></header>
+<main>
+
+<div class="wrap"><article class="prose">
+  <p class="eyebrow">About</p>
+  <h1>About Stemroom</h1>
+  <p>Stemroom is a free practice tool for drummers, guitarists and other musicians. It lets you mute one part of a song and play along with the rest, without sending your music to anyone.</p>
+
+  <h2>Why it exists</h2>
+  <p>Playing along to a record is one of the best ways to practise, but the part you want to play is already on the recording. Backing tracks exist for some songs and not for others. Stem separation fixes that for almost any song, but many tools need an account, a subscription, or an upload to someone else's server. Stemroom runs on your own device instead.</p>
+
+  <h2>How it works</h2>
+  <p>Stemroom uses HTDemucs, an open model from Meta's research team, to split a song into drums, bass, vocals and everything else. It runs in your browser using WebGPU where the device supports it, and WebAssembly where it doesn't. The player is built on the Web Audio API, with its own pitch-preserving time-stretch so you can slow songs down without changing the key. See the <a href="credits.html">credits</a> for the open-source work it builds on.</p>
+
+  <h2>Who makes it</h2>
+  <p>Stemroom is an independent project by Fairuz. It is tested mainly on an iPad Pro, which is why the fast mode is tuned for Apple's WebGPU first.</p>
+
+  <h2 id="contact">Contact</h2>
+  <p id="contact-line">Questions, bug reports and ideas are welcome.</p>
+  <p class="fine" style="color:var(--mute)">When you write, include your device, browser and what you were doing. Please don't send copyrighted audio.</p>
+</article></div>
+<div id="ad-page" hidden></div>
+</main>
+<footer class="site-foot"><div class="wrap">
+  <div><h4>Stemroom</h4><p>Free stem separation in your browser, for drummers, guitarists and anyone who wants to play along.</p></div>
+  <div><h4>Use it</h4><a href="app.html">Open the app</a><a href="guide.html">How to use it</a><a href="faq.html">FAQ</a></div>
+  <div><h4>About</h4><a href="about.html">About and contact</a><a href="credits.html">Credits</a></div>
+  <div><h4>Legal</h4><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><button class="linkbtn" id="ad-choices" hidden>Ad choices</button></div>
+</div></footer>
+<div class="consent" id="consent" role="dialog" aria-label="Ads and privacy" hidden>
+  <p><b>Ads keep Stemroom free.</b> Your songs never leave your device. Ads come from Google and may use cookies. Allow ads?</p>
+  <div class="consent-btns"><button class="btn primary small" id="consent-yes">Allow ads</button><button class="btn small" id="consent-no">No ads</button><a href="privacy.html">Details</a></div>
+</div>
+<script type="module">
+import { initAds } from './js/ads.js';
+const refresh = initAds(() => 'page');
+import { CONTACT_EMAIL } from './js/site-config.js';
+const el = document.getElementById('contact-line');
+if (el && CONTACT_EMAIL) { el.innerHTML = 'Questions, bug reports and ideas are welcome. Email <a href="mailto:' + CONTACT_EMAIL + '">' + CONTACT_EMAIL + '</a>.'; }
+</script>
+</body>
+</html>
