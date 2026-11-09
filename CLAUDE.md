@@ -1,6 +1,6 @@
 # Stemroom
 
-Free, in-browser stem-separation PWA so drummers (and guitarists) can mute a part of a song and practise along. No backend: all processing runs on the user's device. Hosted as a static site on Cloudflare (Workers static assets). Repo: fairuzsamsuddin-code/stemroom, branch `main`.
+Free, in-browser stem-separation PWA so drummers (and guitarists) can mute a part of a song and practise along. No backend: all processing runs on the user's device. Hosted as a static site on Cloudflare (Workers static assets). Repo: fairuzsamsuddin-code/stemroom, branch `main`. Live at https://stemroom.fsiq.com (Fairuz's domain fsiq.com; the Cloudflare custom domain is set up by Fairuz in the dashboard, not from sessions).
 
 ## Owner and devices
 - Owner: Fairuz. Test devices: iPad Pro M1 and iPhone 16 Pro.
@@ -13,7 +13,7 @@ Free, in-browser stem-separation PWA so drummers (and guitarists) can mute a par
 - CPU engine: ORT 1.22.0 wasm, fp32 model in 20 MB parts in `model/`, runs in `src/separate.worker.js`.
 - Auto mode picks the engine in `js/app.js` (`detectGpu`, `chosenEngine`). A GPU failure falls back to CPU and sets `stemroom_force_cpu`.
 - Player UI is a mixer console (design chosen by Fairuz from three mockups): channel strips with real level meters (RMS at 20 Hz from the stems, `levelsOf` in `js/app.js`), rotated range inputs as faders, a stem overview waveform for seeking. Fonts are self-hosted in `fonts/` (Barlow Condensed, IBM Plex Mono, SIL OFL).
-- Ads: `js/ads.js` + `js/ads-config.js`. Off until `publisher` is set in `ads-config.js`. Shown only on library and add-song screens (never the player, never while separating), only after the visitor taps Allow in the consent banner. `ads.txt` and `privacy.html` exist. EEA/UK/CH also needs Google's certified consent message turned on in AdSense (Privacy & messaging). AdSense needs an own domain and may reject a tool-only site, so the content pages in Next up are still needed.
+- Ads: `js/ads.js` + `js/ads-config.js`. Off until `publisher` is set in `ads-config.js`. Shown only on library and add-song screens (never the player, never while separating), only after the visitor taps Allow in the consent banner. `ads.txt` and `privacy.html` exist. Because the app is on a subdomain, `https://fsiq.com/ads.txt` (root) must also contain `subdomain=stemroom.fsiq.com`. EEA/UK/CH also needs Google's certified consent message turned on in AdSense (Privacy & messaging). AdSense needs an own domain and may reject a tool-only site, so the content pages in Next up are still needed.
 - Player: `js/engine.js` plus `js/mixer.worklet.js` (own WSOLA pitch-preserving time-stretch, A-B loop, count-in). Storage in IndexedDB (`js/db.js`).
 - Paste-a-link import supports direct, Dropbox and Google Drive links only. YouTube, Spotify and similar are deliberately refused.
 - `gpu.html` is an experimental WebGPU test page.

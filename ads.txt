@@ -1,5 +1,8 @@
-# Google AdSense authorised sellers file.
-# After AdSense approves this site, replace this comment with the line AdSense shows you, in this form:
+# Google AdSense authorised sellers file for stemroom.fsiq.com.
+# After AdSense approves the site, replace these comments with the line AdSense shows you, in this form:
 # google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
 # Use the same publisher ID as in js/ads-config.js (without the "ca-" prefix here).
-# This file must be served at the root of your own domain, for example https://yourdomain.com/ads.txt
+#
+# Google reads ads.txt from the ROOT domain. Because Stemroom lives on a subdomain, the file served at
+# https://fsiq.com/ads.txt must contain this line, and the line above must be in this file too:
+# subdomain=stemroom.fsiq.com
