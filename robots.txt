@@ -4,4 +4,4 @@ Disallow: /model/
 Disallow: /model-split/
 Disallow: /vendor/
 
-Sitemap: https://stemroom.fsiq.my/sitemap.xml
+Sitemap: https://offtrack.my/sitemap.xml

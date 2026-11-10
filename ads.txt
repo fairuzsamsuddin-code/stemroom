@@ -1,5 +1,3 @@
 google.com, pub-7113719893424351, DIRECT, f08c47fec0942fa0
-# Google AdSense authorised sellers file for stemroom.fsiq.my.
-# Google reads ads.txt from the ROOT domain. Because Stemroom lives on a subdomain, the file served at
-# https://fsiq.my/ads.txt must contain this line:
-# subdomain=stemroom.fsiq.my
+# Google AdSense authorised sellers file for offtrack.my.
+# This file is served from the root of the domain, https://offtrack.my/ads.txt, which is where Google looks.
