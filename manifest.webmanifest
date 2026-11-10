@@ -1,6 +1,6 @@
 {
-  "name": "Stemroom",
-  "short_name": "Stemroom",
+  "name": "Offtrack",
+  "short_name": "Offtrack",
   "description": "Split songs into stems and mute your part to practise along.",
   "start_url": "app.html",
   "scope": "./",

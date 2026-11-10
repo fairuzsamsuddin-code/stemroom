@@ -1,6 +1,8 @@
-# Stemroom
+# Offtrack
 
-Free, in-browser stem-separation PWA so drummers (and guitarists) can mute a part of a song and practise along. No backend: all processing runs on the user's device. Hosted as a static site on Cloudflare (Workers static assets). Repo: fairuzsamsuddin-code/stemroom, branch `main`. Live at https://offtrack.my (Fairuz's own domain, bought Nov 2026; the Cloudflare custom domain is set up by Fairuz in the dashboard, not from sessions). The product name is still Stemroom. The earlier address stemroom.fsiq.my is retired.
+The app was renamed from Stemroom to Offtrack (domain offtrack.my). Only user-visible text changed. Internal names deliberately stay `stemroom`: the IndexedDB name in `js/db.js`, the `stemroom-model` and `stemroom-app-*` cache names, all `stemroom_*` localStorage keys, the Cloudflare Worker name in `wrangler.jsonc`, and the GitHub repo. Renaming them would orphan users' saved songs and the cached 170 MB model. The GitHub repo and Cloudflare Worker are still called stemroom.
+
+Free, in-browser stem-separation PWA so drummers (and guitarists) can mute a part of a song and practise along. No backend: all processing runs on the user's device. Hosted as a static site on Cloudflare (Workers static assets). Repo: fairuzsamsuddin-code/stemroom, branch `main`. Live at https://offtrack.my (Fairuz's own domain, bought Nov 2026; the Cloudflare custom domain is set up by Fairuz in the dashboard, not from sessions). The earlier address stemroom.fsiq.my is retired.
 
 ## Owner and devices
 - Owner: Fairuz. Test devices: iPad Pro M1 and iPhone 16 Pro.

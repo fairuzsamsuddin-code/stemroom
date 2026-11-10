@@ -65,7 +65,7 @@ async function renderLibrary() {
   const songs = await DB.listSongs();
   const list = $('song-list');
   if (!songs.length) {
-    list.innerHTML = '<div class="empty"><b>Add your first song</b>Pick an audio file and Stemroom splits it into drums, bass, vocals and guitar and keys.</div>';
+    list.innerHTML = '<div class="empty"><b>Add your first song</b>Pick an audio file and Offtrack splits it into drums, bass, vocals and guitar and keys.</div>';
   } else {
     list.innerHTML = songs.map((s) => `
       <div class="song" data-id="${s.id}">
@@ -430,7 +430,7 @@ export function normalizeLink(raw) {
   try { u = new URL(raw.trim()); } catch { return { error: 'That doesn\'t look like a web link. Paste the full address, starting with https://' }; }
   if (u.protocol !== 'https:' && u.protocol !== 'http:') return { error: 'Only web links (https://) can be used.' };
   const host = u.hostname.toLowerCase();
-  if (STREAMING.test(host)) return { error: 'Streaming and video sites can\'t be used. Stemroom only takes links to audio files you have the right to use. Save the file to your device and add it with Choose an audio file.' };
+  if (STREAMING.test(host)) return { error: 'Streaming and video sites can\'t be used. Offtrack only takes links to audio files you have the right to use. Save the file to your device and add it with Choose an audio file.' };
   if (/(^|\.)dropbox\.com$/.test(host)) { u.hostname = 'dl.dropboxusercontent.com'; u.searchParams.delete('dl'); u.searchParams.set('raw', '1'); }
   else if (host === 'drive.google.com') {
     const m = u.pathname.match(/\/file\/d\/([^/]+)/) || (u.searchParams.get('id') ? [0, u.searchParams.get('id')] : null);
@@ -467,13 +467,13 @@ $('btn-url').addEventListener('click', async () => {
     if (mm) name = decodeURIComponent(mm[1]);
     urlMsg('Downloaded. Reading the audio…');
     const ok = await useAudio(all.buffer, name);
-    urlMsg(ok ? 'Link added. Check the details below.' : 'The download worked, but it isn\'t an audio file Stemroom can read.', !ok);
+    urlMsg(ok ? 'Link added. Check the details below.' : 'The download worked, but it isn\'t an audio file Offtrack can read.', !ok);
   } catch (e) {
     const m = String(e.message || e);
     if (m === 'page') urlMsg('That link opens a web page, not an audio file. Use the direct download link to the file.', true);
     else if (m === 'big') urlMsg('That file is too large (over 250 MB).', true);
     else if (/^HTTP/.test(m)) urlMsg('The site refused the download (' + m + '). Check that the link is public and still works.', true);
-    else urlMsg('This site doesn\'t allow Stemroom to download from it. Save the file to your device and add it with Choose an audio file.', true);
+    else urlMsg('This site doesn\'t allow Offtrack to download from it. Save the file to your device and add it with Choose an audio file.', true);
   } finally { btn.disabled = false; $('url-bar').hidden = true; }
 });
 $('in-url').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('btn-url').click(); });
@@ -558,7 +558,7 @@ $('btn-sep').addEventListener('click', async () => {
       catch (err) {
         if (token !== state.sepToken) return;
         console.error('GPU engine failed', err);
-        toast('The fast engine failed here, so Stemroom is using the compatible one.', true);
+        toast('The fast engine failed here, so Offtrack is using the compatible one.', true);
         localStorage.setItem('stemroom_force_cpu', '1');
       }
       localStorage.removeItem('stemroom_gpu_run');
@@ -629,7 +629,7 @@ requestAnimationFrame(meterFrame);
 /* ---------- boot ---------- */
 if (localStorage.getItem('stemroom_gpu_run')) {
   localStorage.removeItem('stemroom_gpu_run'); localStorage.setItem('stemroom_force_cpu', '1');
-  setTimeout(() => toast('The fast engine stopped last time, so Stemroom will use the compatible engine. You can pick the fast one again when adding a song.', true), 600);
+  setTimeout(() => toast('The fast engine stopped last time, so Offtrack will use the compatible engine. You can pick the fast one again when adding a song.', true), 600);
 }
 detectCaps().then((caps) => {
   gpuOK = caps.gpu; updateEstimate();
