@@ -1,4 +1,4 @@
-// Stemroom mixer: plays four stems in sync, with per-stem gain, A-B loop and
+// Offtrack mixer: plays four stems in sync, with per-stem gain, A-B loop and
 // pitch-preserving speed change (WSOLA). Alignment is searched on the full mix
 // and applied to every stem, so stems never drift apart and muting is instant.
 

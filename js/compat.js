@@ -2,8 +2,8 @@
 // caps: { gpu, wasm, worker, worklet, audio, idb, phone }
 export function assessDevice(caps) {
   if (!caps.audio || !caps.worklet || !caps.idb) {
-    return { level: 'none', title: 'This browser can\'t run Stemroom',
-      text: 'Stemroom needs a recent Safari, Chrome, Edge or Firefox with audio and offline storage turned on.' };
+    return { level: 'none', title: 'This browser can\'t run Offtrack',
+      text: 'Offtrack needs a recent Safari, Chrome, Edge or Firefox with audio and offline storage turned on.' };
   }
   if (caps.gpu) {
     return { level: 'fast', title: 'Fast mode available',
