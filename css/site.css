@@ -121,3 +121,6 @@ td.ok { color: var(--bass); } td.mid { color: var(--vocals); } td.no { color: #F
   .site-head nav { margin-left: 0; gap: 14px; width: 100%; }
   section.block { padding: 36px 0; }
 }
+
+.site-foot .build, .foot.build { margin: 16px 0 0; font: 500 12px/1 var(--mono); color: var(--mute); font-variant-numeric: tabular-nums; }
+.site-foot .build:empty, .foot.build:empty { display: none; }
