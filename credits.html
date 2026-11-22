@@ -51,7 +51,7 @@
   <div><h4>Use it</h4><a href="app.html">Open the app</a><a href="guide.html">How to use it</a><a href="faq.html">FAQ</a></div>
   <div><h4>About</h4><a href="about.html">About and contact</a><a href="credits.html">Credits</a></div>
   <div><h4>Legal</h4><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><button class="linkbtn" id="ad-choices" hidden>Ad choices</button></div>
-</div></footer>
+</div><div class="wrap"><p class="build" data-build></p></div></footer>
 <div class="consent" id="consent" role="dialog" aria-label="Ads and privacy" hidden>
   <p><b>Ads keep Offtrack free.</b> Your songs never leave your device. Ads come from Google and may use cookies. Allow ads?</p>
   <div class="consent-btns"><button class="btn primary small" id="consent-yes">Allow ads</button><button class="btn small" id="consent-no">No ads</button><a href="privacy.html">Details</a></div>
@@ -60,5 +60,6 @@
 import { initAds } from './js/ads.js';
 const refresh = initAds(() => 'page');
 </script>
+<script src="js/build.js" defer></script>
 </body>
 </html>

@@ -182,3 +182,5 @@ input[type=range].vol:focus-visible::-webkit-slider-thumb { outline: 2px solid #
 .consent-btns { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .consent a, .foot a { color: var(--soft); }
 .linkbtn { appearance: none; border: 0; background: none; color: var(--soft); font: inherit; text-decoration: underline; padding: 0; cursor: pointer; }
+.foot.build { font: 500 12px/1 var(--mono); font-variant-numeric: tabular-nums; }
+.foot.build:empty { display: none; }
